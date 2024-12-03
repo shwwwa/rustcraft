@@ -32,3 +32,9 @@ https://bevy-cheatbook.github.io/introduction.html
 
 Best practices:  
 https://github.com/tbillington/bevy_best_practices/tree/main
+
+
+
+---- OTHER ----
+logo : 
+https://textcraft.net/

@@ -38,7 +38,7 @@ pub fn controls_menu_setup(
     key_map: Res<KeyMap>,
     paths: Res<GameFolderPaths>,
 ) {
-    let font: Handle<Font> = assets.load(format!("{}/fonts/gohu.ttf", paths.assets_folder_path));
+    let font: Handle<Font> = assets.load("./fonts/RustCraftRegular-Bmg3.otf");
     let trash_icon = assets.load("./trash.png");
 
     commands
@@ -283,7 +283,7 @@ pub fn update_input_component(
     paths: &Res<GameFolderPaths>,
 ) {
     commands.entity(entity).despawn_descendants();
-    let font: Handle<Font> = assets.load(format!("{}/fonts/gohu.ttf", paths.assets_folder_path));
+    let font: Handle<Font> = assets.load("./fonts/RustCraftRegular-Bmg3.otf");
 
     // List all possible binds, and add them as text elements
     for key in binds {

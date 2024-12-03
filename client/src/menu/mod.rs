@@ -94,7 +94,7 @@ pub enum MenuState {
     Disabled,
 }
 
-pub const NORMAL_BUTTON: Color = Color::srgb(0.15, 0.15, 0.15);
+pub const NORMAL_BUTTON: Color = Color::srgb(0.42, 0.42, 0.42);
 pub const HOVERED_BUTTON: Color = Color::srgb(0.25, 0.25, 0.25);
 pub const HOVERED_PRESSED_BUTTON: Color = Color::srgb(0.25, 0.65, 0.25);
 pub const PRESSED_BUTTON: Color = Color::srgb(0.35, 0.75, 0.35);
@@ -163,29 +163,28 @@ fn menu_setup(mut menu_state: ResMut<NextState<MenuState>>, mut commands: Comman
 }
 
 fn main_menu_setup(mut commands: Commands, asset_server: Res<AssetServer>) {
+    // Load the custom game title image
+    let background_image = asset_server.load("./graphics/background.png");
+    let title_image = asset_server.load("./graphics/title.png");
+    let font: Handle<Font> = asset_server.load("./fonts/RustCraftRegular-Bmg3.otf");
+
     // Common style for all buttons on the screen
     let button_style = Style {
-        width: Val::Px(300.0),
-        height: Val::Px(65.0),
+        width: Val::Px(400.0),
+        height: Val::Px(60.0),
         margin: UiRect::all(Val::Px(20.0)),
         justify_content: JustifyContent::Center,
         align_items: AlignItems::Center,
         ..Default::default()
     };
-    let button_icon_style = Style {
-        width: Val::Px(30.0),
-        // This takes the icons out of the flexbox flow, to be positioned exactly
-        position_type: PositionType::Absolute,
-        // The icon will be close to the left border of the button
-        left: Val::Px(10.0),
-        ..Default::default()
-    };
     let button_text_style = TextStyle {
+        font: font.clone(),
         font_size: 33.0,
         color: TEXT_COLOR,
         ..Default::default()
     };
 
+    // Main container for the menu
     commands
         .spawn((
             NodeBundle {
@@ -194,125 +193,92 @@ fn main_menu_setup(mut commands: Commands, asset_server: Res<AssetServer>) {
                     height: Val::Percent(100.0),
                     align_items: AlignItems::Center,
                     justify_content: JustifyContent::Center,
+                    flex_direction: FlexDirection::Column, // Center everything vertically
                     ..Default::default()
                 },
+                background_color: Color::NONE.into(),
                 ..Default::default()
             },
+            UiImage::new(background_image), // Set the background image
             StateScoped(MenuState::Main),
         ))
         .with_children(|parent| {
+            // Display the game title as an image
+            let image_width = 800.0;
+            let aspect_ratio = 601.0 / 94.0;
+            let image_height = image_width / aspect_ratio;
+
+            parent.spawn(ImageBundle {
+                style: Style {
+                    margin: UiRect::bottom(Val::Px(120.0)), // Add space below the title image
+                    width: Val::Px(image_width),            // Width calculated using aspect ratio
+                    height: Val::Px(image_height),          // Height based on desired size
+                    ..Default::default()
+                },
+                image: UiImage::new(title_image),
+                ..Default::default()
+            });
+
+            // Add buttons for each action available in the menu
             parent
-                .spawn(NodeBundle {
-                    style: Style {
-                        flex_direction: FlexDirection::Column,
-                        align_items: AlignItems::Center,
+                .spawn((
+                    ButtonBundle {
+                        style: button_style.clone(),
+                        background_color: NORMAL_BUTTON.into(),
                         ..Default::default()
                     },
-                    background_color: CRIMSON.into(),
-                    ..Default::default()
-                })
+                    MenuButtonAction::Solo,
+                ))
                 .with_children(|parent| {
-                    // Display the game name
-                    parent.spawn(
-                        TextBundle::from_section(
-                            "rustcraft",
-                            TextStyle {
-                                font_size: 67.0,
-                                color: TEXT_COLOR,
-                                ..Default::default()
-                            },
-                        )
-                        .with_style(Style {
-                            margin: UiRect::all(Val::Px(50.0)),
-                            ..Default::default()
-                        }),
-                    );
+                    parent.spawn(TextBundle::from_section(
+                        "Singleplayer",
+                        button_text_style.clone(),
+                    ));
+                });
 
-                    // Display three buttons for each action available from the main menu:
-                    // - new game
-                    // - settings
-                    // - quit
-                    parent
-                        .spawn((
-                            ButtonBundle {
-                                style: button_style.clone(),
-                                background_color: NORMAL_BUTTON.into(),
-                                ..Default::default()
-                            },
-                            MenuButtonAction::Solo,
-                        ))
-                        .with_children(|parent| {
-                            let icon = asset_server.load("./graphics/right.png");
-                            parent.spawn(ImageBundle {
-                                style: button_icon_style.clone(),
-                                image: UiImage::new(icon),
-                                ..Default::default()
-                            });
-                            parent
-                                .spawn(TextBundle::from_section("Solo", button_text_style.clone()));
-                        });
+            parent
+                .spawn((
+                    ButtonBundle {
+                        style: button_style.clone(),
+                        background_color: NORMAL_BUTTON.into(),
+                        ..Default::default()
+                    },
+                    MenuButtonAction::Multi,
+                ))
+                .with_children(|parent| {
+                    parent.spawn(TextBundle::from_section(
+                        "Multiplayer",
+                        button_text_style.clone(),
+                    ));
+                });
 
-                    parent
-                        .spawn((
-                            ButtonBundle {
-                                style: button_style.clone(),
-                                background_color: NORMAL_BUTTON.into(),
-                                ..Default::default()
-                            },
-                            MenuButtonAction::Multi,
-                        ))
-                        .with_children(|parent| {
-                            let icon = asset_server.load("./graphics/multi.png");
-                            parent.spawn(ImageBundle {
-                                style: button_icon_style.clone(),
-                                image: UiImage::new(icon),
-                                ..Default::default()
-                            });
-                            parent.spawn(TextBundle::from_section(
-                                "Multi",
-                                button_text_style.clone(),
-                            ));
-                        });
+            parent
+                .spawn((
+                    ButtonBundle {
+                        style: button_style.clone(),
+                        background_color: NORMAL_BUTTON.into(),
+                        ..Default::default()
+                    },
+                    MenuButtonAction::Settings,
+                ))
+                .with_children(|parent| {
+                    parent.spawn(TextBundle::from_section(
+                        "Settings",
+                        button_text_style.clone(),
+                    ));
+                });
 
-                    parent
-                        .spawn((
-                            ButtonBundle {
-                                style: button_style.clone(),
-                                background_color: NORMAL_BUTTON.into(),
-                                ..Default::default()
-                            },
-                            MenuButtonAction::Settings,
-                        ))
-                        .with_children(|parent| {
-                            let icon = asset_server.load("./graphics/wrench.png");
-                            parent.spawn(ImageBundle {
-                                style: button_icon_style.clone(),
-                                image: UiImage::new(icon),
-                                ..Default::default()
-                            });
-                            parent.spawn(TextBundle::from_section(
-                                "Settings",
-                                button_text_style.clone(),
-                            ));
-                        });
-                    parent
-                        .spawn((
-                            ButtonBundle {
-                                style: button_style,
-                                background_color: NORMAL_BUTTON.into(),
-                                ..Default::default()
-                            },
-                            MenuButtonAction::Quit,
-                        ))
-                        .with_children(|parent| {
-                            let icon = asset_server.load("./graphics/exitRight.png");
-                            parent.spawn(ImageBundle {
-                                style: button_icon_style,
-                                image: UiImage::new(icon),
-                                ..Default::default()
-                            });
-                            parent.spawn(TextBundle::from_section("Quit", button_text_style));
-                        });
+            parent
+                .spawn((
+                    ButtonBundle {
+                        style: button_style,
+                        background_color: NORMAL_BUTTON.into(),
+                        ..Default::default()
+                    },
+                    MenuButtonAction::Quit,
+                ))
+                .with_children(|parent| {
+                    parent.spawn(TextBundle::from_section("Quit", button_text_style.clone()));
                 });
         });
 }

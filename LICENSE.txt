@@ -2,6 +2,7 @@ This project is distributed under two different licenses:
 
 1. The code and all original assets created by the authors of this project are licensed under the MIT License.
 2. Some textures used in this project are derived from the resource pack "Pixel Perfection" by XSSheep. These textures are licensed under the Creative Commons Attribution-Share Alike 4.0 International License (CC BY-SA 4.0).
+3. The fonts used in this project are in the Public Domain.
 
 Details for each license are provided below.
 
@@ -36,3 +37,10 @@ Creative Commons Attribution-Share Alike 4.0 International License (CC BY-SA 4.0
 Some textures used in this project are derived from the resource pack "Pixel Perfection" by XSSheep. These textures are licensed under the CC BY-SA 4.0 license.
 
 For more information, visit: https://creativecommons.org/licenses/by-sa/4.0/
+
+---
+
+Public Domain - MineCraft Font
+
+The fonts used in this project, are in the Public Domain. These fonts were downloaded from the following source:
+https://www.fontspace.com/minecraft-font-f28180

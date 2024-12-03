@@ -102,10 +102,7 @@ pub fn setup_chat(
                         ..Default::default()
                     },
                     text_style: TextInputTextStyle(TextStyle {
-                        font: asset_server.load(format!(
-                            "{}/fonts/gohu.ttf",
-                            paths.assets_folder_path.clone()
-                        )),
+                        font: asset_server.load(("./fonts/RustCraftRegular-Bmg3.otf")),
                         font_size: 17.,
                         color: Color::WHITE,
                     }),
@@ -215,8 +212,7 @@ pub fn render_chat(
                         text: Text::from_section(
                             format!("<{}> : {}", message.author_name, message.content),
                             TextStyle {
-                                font: asset_server
-                                    .load(format!("{}/fonts/gohu.ttf", paths.assets_folder_path)),
+                                font: asset_server.load("./fonts/RustCraftRegular-Bmg3.otf"),
                                 font_size: 17.,
                                 color: Color::WHITE,
                             }

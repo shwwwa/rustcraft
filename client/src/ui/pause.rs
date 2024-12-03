@@ -101,10 +101,7 @@ pub fn setup_pause_menu(
                                 text: Text::from_section(
                                     msg,
                                     TextStyle {
-                                        font: assets.load(format!(
-                                            "{}/fonts/gohu.ttf",
-                                            paths.assets_folder_path
-                                        )),
+                                        font: assets.load("./fonts/RustCraftRegular-Bmg3.otf"),
                                         font_size: 20.,
                                         color: Color::WHITE,
                                     },

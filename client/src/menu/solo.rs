@@ -62,7 +62,7 @@ pub fn solo_menu_setup(
     assets: Res<AssetServer>,
     paths: Res<GameFolderPaths>,
 ) {
-    let font: Handle<Font> = assets.load(format!("{}/fonts/gohu.ttf", paths.assets_folder_path));
+    let font: Handle<Font> = assets.load("./fonts/RustCraftRegular-Bmg3.otf");
     let txt_style = TextStyle {
         font: font.clone(),
         font_size: 20.,
@@ -357,8 +357,7 @@ fn add_world_item(
                 sections: vec![TextSection {
                     value: name.clone() + "\n",
                     style: TextStyle {
-                        font: asset_server
-                            .load(format!("{}/fonts/gohu.ttf", paths.assets_folder_path)),
+                        font: asset_server.load("./fonts/RustCraftRegular-Bmg3.otf"),
                         font_size: 20.,
                         color: Color::WHITE,
                     },
