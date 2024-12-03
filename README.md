@@ -1,4 +1,4 @@
-# minecraft-rust
+# rustcraft
 
 Minecraft game clone written in Rust, using the Bevy game engine.
 
@@ -28,7 +28,7 @@ Minecraft game clone written in Rust, using the Bevy game engine.
 
 # Download
 
-You can download the game for **Windows** and **Linux** from the [Releases page](https://github.com/c2i-junia/minecraft-rust/releases) of the GitHub repository.
+You can download the game for **Windows** and **Linux** from the [Releases page](https://github.com/c2i-junia/rustcraft/releases) of the GitHub repository.
 
 Once downloaded, extract the archive for your operating system. The executable will be located in the `/bin` folder of the extracted directory.
 
@@ -128,10 +128,10 @@ Note: the first compilation will be slow depending on your hardware, next compil
 
 ```sh
 # Clone the repository
-git clone https://github.com/c2i-junia/minecraft-rust
+git clone https://github.com/c2i-junia/rustcraft
 
 # Navigate to the project directory
-cd minecraft-rust
+cd rustcraft
 ```
 
 Debug mode:
@@ -146,8 +146,8 @@ Release mode:
 just generate-release-folder
 
 # Run the executable
-./release/bin/minecraft-rust         # run the client
-./release/bin/minecraft-rust-server  # run the server
+./release/bin/rustcraft         # run the client
+./release/bin/rustcraft-server  # run the server
 ```
 
 # Contributing
