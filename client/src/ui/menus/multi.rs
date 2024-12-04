@@ -1,16 +1,18 @@
 use super::{MenuButtonAction, MenuState, ScrollingList};
 use crate::constants::SERVER_LIST_SAVE_NAME;
 use crate::network::{TargetServer, TargetServerState};
+use crate::ui::assets::*;
+use crate::ui::style::*;
 use crate::GameState;
 use bevy::prelude::*;
 use bevy::{
-    asset::{AssetServer, Handle},
+    asset::AssetServer,
     color::Color,
     prelude::{
         BuildChildren, Button, ButtonBundle, Changed, Commands, Component, DespawnRecursiveExt,
         Entity, ImageBundle, NodeBundle, Query, Res, StateScoped, TextBundle, With, Without,
     },
-    text::{Font, Text, TextSection, TextStyle},
+    text::{Text, TextSection, TextStyle},
     ui::{
         AlignContent, AlignItems, BackgroundColor, BorderColor, Display, FlexDirection,
         GridPlacement, GridTrack, Interaction, JustifyContent, Overflow, Style, UiImage, UiRect,
@@ -55,25 +57,16 @@ pub struct ServerIpInput;
 #[derive(Component)]
 pub struct ServerNameInput;
 
-pub const BACKGROUND_COLOR: Color = Color::srgb(0.5, 0.5, 0.5);
-
 pub fn multiplayer_menu_setup(
     mut commands: Commands,
-    assets: Res<AssetServer>,
+    asset_server: Res<AssetServer>,
     _paths: Res<GameFolderPaths>,
 ) {
-    let font: Handle<Font> = assets.load("./fonts/RustCraftRegular-Bmg3.otf");
-    let txt_style = TextStyle {
-        font: font.clone(),
-        font_size: 20.,
-        color: Color::WHITE,
-    };
+    let font = load_font(&asset_server);
+    let background_image = load_background_image(&asset_server);
 
-    let txt_style_inactive = TextStyle {
-        font,
-        font_size: 20.,
-        color: Color::srgb(0.3, 0.3, 0.3),
-    };
+    let txt_style = text_style(font.clone(), 20.0, TEXT_COLOR);
+    let txt_style_inactive = text_style(font.clone(), 20.0, Color::srgb(0.3, 0.3, 0.3));
 
     let btn_style = Style {
         display: Display::Flex,
@@ -81,6 +74,7 @@ pub fn multiplayer_menu_setup(
         justify_content: JustifyContent::Center,
         align_items: AlignItems::Center,
         border: UiRect::all(Val::Px(2.)),
+        height: Val::Px(50.0),
         ..Default::default()
     };
 
@@ -100,6 +94,7 @@ pub fn multiplayer_menu_setup(
                 },
                 ..Default::default()
             },
+            UiImage::new(background_image),
         ))
         .with_children(|root| {
             root.spawn(TextBundle {

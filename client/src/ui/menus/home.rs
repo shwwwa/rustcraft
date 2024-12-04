@@ -1,44 +1,27 @@
+// File: ./client/src/ui/menus/home.rs
+
 use bevy::prelude::*;
 
-use crate::ui::style::NORMAL_BUTTON;
+use crate::ui::assets::*;
+use crate::ui::style::{background_image_style, big_button_style, text_style, NORMAL_BUTTON};
 use crate::TEXT_COLOR;
 
 use super::{MenuButtonAction, MenuState};
 
 pub fn home_setup(mut commands: Commands, asset_server: Res<AssetServer>) {
-    // Load the custom game title image
-    let background_image = asset_server.load("./graphics/background.png");
-    let title_image = asset_server.load("./graphics/title.png");
-    let font: Handle<Font> = asset_server.load("./fonts/RustCraftRegular-Bmg3.otf");
+    // Load assets
+    let background_image = load_background_image(&asset_server);
+    let button_background_image = load_button_background_image(&asset_server);
+    let title_image = load_title_image(&asset_server);
+    let font = load_font(&asset_server);
 
-    // Common style for all buttons on the screen
-    let button_style = Style {
-        width: Val::Px(400.0),
-        height: Val::Px(60.0),
-        margin: UiRect::all(Val::Px(20.0)),
-        justify_content: JustifyContent::Center,
-        align_items: AlignItems::Center,
-        ..Default::default()
-    };
-    let button_text_style = TextStyle {
-        font: font.clone(),
-        font_size: 33.0,
-        color: TEXT_COLOR,
-        ..Default::default()
-    };
+    let button_text_style = text_style(font.clone(), 33.0, TEXT_COLOR);
 
     // Main container for the menu
     commands
         .spawn((
             NodeBundle {
-                style: Style {
-                    width: Val::Percent(100.0),
-                    height: Val::Percent(100.0),
-                    align_items: AlignItems::Center,
-                    justify_content: JustifyContent::Center,
-                    flex_direction: FlexDirection::Column, // Center everything vertically
-                    ..Default::default()
-                },
+                style: background_image_style(), // Common background style
                 background_color: Color::NONE.into(),
                 ..Default::default()
             },
@@ -54,8 +37,8 @@ pub fn home_setup(mut commands: Commands, asset_server: Res<AssetServer>) {
             parent.spawn(ImageBundle {
                 style: Style {
                     margin: UiRect::bottom(Val::Px(120.0)), // Add space below the title image
-                    width: Val::Px(image_width),            // Width calculated using aspect ratio
-                    height: Val::Px(image_height),          // Height based on desired size
+                    width: Val::Px(image_width),
+                    height: Val::Px(image_height),
                     ..Default::default()
                 },
                 image: UiImage::new(title_image),
@@ -63,65 +46,25 @@ pub fn home_setup(mut commands: Commands, asset_server: Res<AssetServer>) {
             });
 
             // Add buttons for each action available in the menu
-            parent
-                .spawn((
-                    ButtonBundle {
-                        style: button_style.clone(),
-                        background_color: NORMAL_BUTTON.into(),
-                        ..Default::default()
-                    },
-                    MenuButtonAction::Solo,
-                ))
-                .with_children(|parent| {
-                    parent.spawn(TextBundle::from_section(
-                        "Singleplayer",
-                        button_text_style.clone(),
-                    ));
-                });
-
-            parent
-                .spawn((
-                    ButtonBundle {
-                        style: button_style.clone(),
-                        background_color: NORMAL_BUTTON.into(),
-                        ..Default::default()
-                    },
-                    MenuButtonAction::Multi,
-                ))
-                .with_children(|parent| {
-                    parent.spawn(TextBundle::from_section(
-                        "Multiplayer",
-                        button_text_style.clone(),
-                    ));
-                });
-
-            parent
-                .spawn((
-                    ButtonBundle {
-                        style: button_style.clone(),
-                        background_color: NORMAL_BUTTON.into(),
-                        ..Default::default()
-                    },
-                    MenuButtonAction::Settings,
-                ))
-                .with_children(|parent| {
-                    parent.spawn(TextBundle::from_section(
-                        "Settings",
-                        button_text_style.clone(),
-                    ));
-                });
-
-            parent
-                .spawn((
-                    ButtonBundle {
-                        style: button_style,
-                        background_color: NORMAL_BUTTON.into(),
-                        ..Default::default()
-                    },
-                    MenuButtonAction::Quit,
-                ))
-                .with_children(|parent| {
-                    parent.spawn(TextBundle::from_section("Quit", button_text_style.clone()));
-                });
+            for (action, label) in [
+                (MenuButtonAction::Solo, "Singleplayer"),
+                (MenuButtonAction::Multi, "Multiplayer"),
+                (MenuButtonAction::Settings, "Settings"),
+                (MenuButtonAction::Quit, "Quit"),
+            ] {
+                parent
+                    .spawn((
+                        ButtonBundle {
+                            style: big_button_style(), // Use large button style
+                            background_color: NORMAL_BUTTON.into(),
+                            image: UiImage::new(button_background_image.clone()),
+                            ..Default::default()
+                        },
+                        action,
+                    ))
+                    .with_children(|parent| {
+                        parent.spawn(TextBundle::from_section(label, button_text_style.clone()));
+                    });
+            }
         });
 }

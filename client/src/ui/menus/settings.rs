@@ -1,5 +1,9 @@
-use crate::{ui::style::NORMAL_BUTTON, TEXT_COLOR};
+use crate::{
+    ui::{assets::load_background_image, style::NORMAL_BUTTON},
+    TEXT_COLOR,
+};
 use bevy::{
+    asset::AssetServer,
     color::palettes::css::CRIMSON,
     prelude::{
         BuildChildren, Button, ButtonBundle, Changed, Commands, Component, Entity, NodeBundle,
@@ -7,7 +11,8 @@ use bevy::{
     },
     text::TextStyle,
     ui::{
-        AlignItems, BackgroundColor, FlexDirection, Interaction, JustifyContent, Style, UiRect, Val,
+        AlignItems, BackgroundColor, FlexDirection, Interaction, JustifyContent, Style, UiImage,
+        UiRect, Val,
     },
 };
 
@@ -25,10 +30,12 @@ pub enum DisplayQuality {
 #[derive(Resource, Debug, Component, PartialEq, Eq, Clone, Copy)]
 pub struct Volume(pub u32);
 
-pub fn settings_menu_setup(mut commands: Commands) {
+pub fn settings_menu_setup(mut commands: Commands, asset_server: Res<AssetServer>) {
+    let background_image = load_background_image(&asset_server);
+
     let button_style = Style {
-        width: Val::Px(200.0),
-        height: Val::Px(65.0),
+        width: Val::Px(400.0),
+        height: Val::Px(60.0),
         margin: UiRect::all(Val::Px(20.0)),
         justify_content: JustifyContent::Center,
         align_items: AlignItems::Center,
@@ -53,6 +60,7 @@ pub fn settings_menu_setup(mut commands: Commands) {
                 },
                 ..Default::default()
             },
+            UiImage::new(background_image), // Set the background image
             StateScoped(MenuState::Settings),
         ))
         .with_children(|parent| {
@@ -63,7 +71,6 @@ pub fn settings_menu_setup(mut commands: Commands) {
                         align_items: AlignItems::Center,
                         ..Default::default()
                     },
-                    background_color: CRIMSON.into(),
                     ..Default::default()
                 })
                 .with_children(|parent| {
@@ -77,7 +84,6 @@ pub fn settings_menu_setup(mut commands: Commands) {
                             .spawn((
                                 ButtonBundle {
                                     style: button_style.clone(),
-                                    background_color: NORMAL_BUTTON.into(),
                                     ..Default::default()
                                 },
                                 action,

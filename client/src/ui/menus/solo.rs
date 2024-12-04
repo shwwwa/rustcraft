@@ -1,17 +1,19 @@
 use super::{MenuButtonAction, MenuState, ScrollingList};
+use crate::ui::assets::*;
+use crate::ui::style::*;
 use crate::world::ClientWorldMap;
 use crate::{constants::SAVE_PATH, GameState, LoadWorldEvent};
 use bevy::prelude::Resource;
 use bevy::prelude::*;
 use bevy::{
-    asset::{AssetServer, Handle},
+    asset::AssetServer,
     color::Color,
     prelude::{
         BuildChildren, Button, ButtonBundle, Changed, Commands, Component, DespawnRecursiveExt,
         Entity, EventWriter, ImageBundle, NextState, NodeBundle, Query, Res, ResMut, StateScoped,
         Text, TextBundle, With,
     },
-    text::{Font, TextSection, TextStyle},
+    text::{TextSection, TextStyle},
     ui::{
         AlignContent, AlignItems, BackgroundColor, BorderColor, Display, FlexDirection,
         GridPlacement, GridTrack, Interaction, JustifyContent, Overflow, Style, UiImage, UiRect,
@@ -55,14 +57,14 @@ pub struct SelectedWorld {
     pub name: Option<String>,
 }
 
-pub const BACKGROUND_COLOR: Color = Color::srgb(0.5, 0.5, 0.5);
-
 pub fn solo_menu_setup(
     mut commands: Commands,
-    assets: Res<AssetServer>,
+    assets_server: Res<AssetServer>,
     _paths: Res<GameFolderPaths>,
 ) {
-    let font: Handle<Font> = assets.load("./fonts/RustCraftRegular-Bmg3.otf");
+    let background_image = load_background_image(&assets_server);
+    let font = load_font(&assets_server);
+
     let txt_style = TextStyle {
         font: font.clone(),
         font_size: 20.,
@@ -81,6 +83,7 @@ pub fn solo_menu_setup(
         justify_content: JustifyContent::Center,
         align_items: AlignItems::Center,
         border: UiRect::all(Val::Px(2.)),
+        height: Val::Px(50.0),
         ..Default::default()
     };
 
@@ -100,6 +103,7 @@ pub fn solo_menu_setup(
                 },
                 ..Default::default()
             },
+            UiImage::new(background_image),
         ))
         .with_children(|root| {
             root.spawn(TextBundle {
