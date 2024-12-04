@@ -4,9 +4,8 @@ use crate::init::acquire_socket_by_port;
 use clap::Parser;
 use shared::GameServerConfig;
 
-mod chat;
-mod dispatcher;
 mod init;
+mod network;
 mod player;
 mod time;
 mod world;

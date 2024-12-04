@@ -16,9 +16,9 @@ use bevy::{
 };
 use shared::GameFolderPaths;
 
-use super::{MenuButtonAction, MenuState, ScrollingList, NORMAL_BUTTON};
-use crate::input::data::GameAction;
+use super::{MenuButtonAction, MenuState, ScrollingList};
 use crate::KeyMap;
+use crate::{input::data::GameAction, ui::style::NORMAL_BUTTON};
 
 #[derive(Debug, Component, PartialEq, Eq)]
 pub struct ClearButton(GameAction, Entity);
@@ -280,7 +280,7 @@ pub fn update_input_component(
     entity: Entity,
     binds: &Vec<KeyCode>,
     assets: &AssetServer,
-    paths: &Res<GameFolderPaths>,
+    _paths: &Res<GameFolderPaths>,
 ) {
     commands.entity(entity).despawn_descendants();
     let font: Handle<Font> = assets.load("./fonts/RustCraftRegular-Bmg3.otf");

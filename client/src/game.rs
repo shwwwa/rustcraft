@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::ui::chat::{render_chat, setup_chat};
+use crate::ui::hud::chat::{render_chat, setup_chat};
 use bevy::prelude::*;
 use bevy_atmosphere::prelude::*;
 use inventory::Inventory;
@@ -9,30 +9,30 @@ use shared::messages::PlayerSpawnEvent;
 use crate::world::time::ClientTime;
 use crate::world::ClientWorldMap;
 
-use crate::ui::debug::BlockDebugWireframeSettings;
-use crate::ui::pause::{render_pause_menu, setup_pause_menu};
-use crate::ui::reticle::spawn_reticle;
+use crate::ui::hud::debug::BlockDebugWireframeSettings;
+use crate::ui::hud::reticle::spawn_reticle;
+use crate::ui::menus::pause::{render_pause_menu, setup_pause_menu};
 use bevy::color::palettes::basic::WHITE;
 use bevy::diagnostic::FrameTimeDiagnosticsPlugin;
 use bevy::pbr::wireframe::{WireframeConfig, WireframePlugin};
 
-use crate::lighting::setup_main_lighting;
-use crate::ui::debug::targeted_block::block_text_update_system;
+use crate::ui::hud::debug::targeted_block::block_text_update_system;
+use crate::world::celestial::setup_main_lighting;
 use bevy_mod_raycast::deferred::DeferredRaycastingPlugin;
 
-use crate::lighting::*;
-use crate::ui::debug::*;
-use crate::ui::hotbar::*;
-use crate::ui::set_ui_mode;
+use crate::ui::hud::debug::*;
+use crate::ui::hud::hotbar::*;
+use crate::ui::hud::set_ui_mode;
+use crate::world::celestial::*;
 use crate::world::*;
 
 use crate::camera::*;
 use crate::input::*;
 use crate::player::*;
-use crate::ui::inventory::*;
+use crate::ui::hud::inventory::*;
 use shared::world::{BlockId, ItemId, WorldSeed};
 
-use crate::menu::game_loading_screen::load_loading_screen;
+use crate::menus::loading::load_loading_screen;
 use crate::network::{
     establish_authenticated_connection_to_server, init_server_connection,
     launch_local_server_system, network_failure_handler, poll_network_messages,

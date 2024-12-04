@@ -1,7 +1,7 @@
 use crate::input::keyboard::is_action_just_pressed;
 use crate::input::keyboard::is_action_just_released;
 use crate::network::{send_chat_message, CachedChatConversation};
-use crate::ui::UiDialog;
+use crate::ui::hud::UiDialog;
 use crate::KeyMap;
 use bevy::prelude::*;
 use bevy_renet::renet::RenetClient;
@@ -33,7 +33,7 @@ const ANIMATION_HIDE: u64 = 2_000;
 pub fn setup_chat(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
-    paths: Res<GameFolderPaths>,
+    _paths: Res<GameFolderPaths>,
 ) {
     commands
         .spawn((
@@ -102,7 +102,7 @@ pub fn setup_chat(
                         ..Default::default()
                     },
                     text_style: TextInputTextStyle(TextStyle {
-                        font: asset_server.load(("./fonts/RustCraftRegular-Bmg3.otf")),
+                        font: asset_server.load("./fonts/RustCraftRegular-Bmg3.otf"),
                         font_size: 17.,
                         color: Color::WHITE,
                     }),
@@ -139,7 +139,7 @@ pub fn render_chat(
     mut last_render_ts: Local<u64>,
     mut event: EventReader<TextInputSubmitEvent>,
     mut commands: Commands,
-    paths: Res<GameFolderPaths>,
+    _paths: Res<GameFolderPaths>,
 ) {
     let (cached_conv, asset_server, mut client, keyboard_input, key_map) = resources;
     let (mut text_query, mut visibility_query, parent_query, mut animation_query) = queries;

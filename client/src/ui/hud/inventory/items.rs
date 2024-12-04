@@ -1,6 +1,6 @@
 use shared::world::{ItemId, ItemStack, ItemType};
 
-use crate::ui::inventory::FloatingStack;
+use crate::ui::hud::inventory::FloatingStack;
 
 /// Removes `nb` items from the floating stack\
 /// Cannot go lower than `0` items\

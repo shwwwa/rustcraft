@@ -19,7 +19,7 @@ use shared::GameFolderPaths;
 
 use crate::{input::keyboard::is_action_just_pressed, GameState, KeyMap};
 
-use super::UiDialog;
+use crate::ui::hud::UiDialog;
 
 #[derive(Component)]
 pub struct PauseMenu;
@@ -34,7 +34,7 @@ pub enum PauseButtonAction {
 pub fn setup_pause_menu(
     mut commands: Commands,
     assets: Res<AssetServer>,
-    paths: Res<GameFolderPaths>,
+    _paths: Res<GameFolderPaths>,
 ) {
     commands
         .spawn((

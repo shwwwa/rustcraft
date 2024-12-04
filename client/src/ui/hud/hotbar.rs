@@ -2,7 +2,7 @@ use bevy::{prelude::*, ui::FocusPolicy};
 
 use crate::{
     constants::{HOTBAR_BORDER, HOTBAR_CELL_SIZE, HOTBAR_PADDING, MAX_HOTBAR_SLOTS, TEXTURE_SIZE},
-    ui::InventoryCell,
+    ui::hud::InventoryCell,
     world::MaterialResource,
     GameState,
 };

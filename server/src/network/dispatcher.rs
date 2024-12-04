@@ -1,11 +1,12 @@
-use crate::chat::{setup_chat_resources, ChatMessageEvent};
 use crate::init::{ServerLobby, TickCounter};
+use crate::network::broadcast_chat::*;
+use crate::network::broadcast_world::WorldUpdateRequestEvent;
+use crate::network::broadcast_world::*;
 use crate::player::handle_player_inputs;
 use crate::time::update_server_time;
+use crate::world;
 use crate::world::save::SaveRequestEvent;
 use crate::world::BlockInteractionEvent;
-use crate::world::WorldUpdateRequestEvent;
-use crate::{chat, world};
 use bevy::prelude::*;
 use bevy_renet::renet::{DefaultChannel, RenetServer, ServerEvent};
 use bincode::Options;
@@ -35,12 +36,9 @@ pub fn setup_resources_and_events(app: &mut App) {
 pub fn register_systems(app: &mut App) {
     app.add_systems(Update, server_update_system);
 
-    app.add_systems(Update, chat::broadcast_chat_messages);
+    app.add_systems(Update, broadcast_chat_messages);
 
-    app.add_systems(
-        Update,
-        (world::broadcast_world_state, world::send_world_update),
-    );
+    app.add_systems(Update, (broadcast_world_state, send_world_update));
 
     app.add_systems(Update, world::save::save_world_system);
     app.add_systems(Update, world::handle_block_interactions);

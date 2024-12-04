@@ -13,7 +13,8 @@ use shared::{
 use crate::world::ClientWorldMap;
 
 use crate::world::time::ClientTime;
-use crate::world::{RenderDistance, WorldRenderRequestUpdateEvent};
+use crate::world::RenderDistance;
+use crate::world::WorldRenderRequestUpdateEvent;
 
 use super::api::send_network_action;
 

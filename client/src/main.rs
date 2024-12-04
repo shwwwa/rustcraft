@@ -4,11 +4,8 @@ mod camera;
 mod constants;
 mod game;
 mod input;
-mod lighting;
-mod menu;
 mod network;
 mod player;
-mod splash_screen;
 mod ui;
 mod world;
 
@@ -23,11 +20,12 @@ use bevy::{
 use clap::Parser;
 use constants::{TEXTURE_PATH_BASE, TEXTURE_PATH_CUSTOM};
 use input::{data::GameAction, keyboard::get_bindings};
-use menu::settings::{DisplayQuality, Volume};
-use menu::solo::SelectedWorld;
+use menus::settings::{DisplayQuality, Volume};
+use menus::solo::SelectedWorld;
 use serde::{Deserialize, Serialize};
 use shared::GameFolderPaths;
 use std::collections::BTreeMap;
+use ui::menus::{self, splash};
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
@@ -153,10 +151,6 @@ fn main() {
         .init_state::<GameState>()
         .enable_state_scoped_entities::<GameState>()
         // Adds the plugins for each state
-        .add_plugins((
-            splash_screen::splash_plugin,
-            menu::menu_plugin,
-            game::game_plugin,
-        ))
+        .add_plugins((splash::splash_plugin, menus::menu_plugin, game::game_plugin))
         .run();
 }

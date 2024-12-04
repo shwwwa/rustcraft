@@ -1,3 +1,4 @@
+use crate::{ui::style::NORMAL_BUTTON, TEXT_COLOR};
 use bevy::{
     color::palettes::css::CRIMSON,
     prelude::{
@@ -10,9 +11,7 @@ use bevy::{
     },
 };
 
-use crate::TEXT_COLOR;
-
-use super::{MenuButtonAction, MenuState, SelectedOption, NORMAL_BUTTON};
+use super::{MenuButtonAction, MenuState, SelectedOption};
 
 // One of the two settings that can be set through the menu. It will be a resource in the app
 #[derive(Resource, Debug, Component, PartialEq, Eq, Clone, Copy)]
@@ -38,7 +37,7 @@ pub fn settings_menu_setup(mut commands: Commands) {
 
     let button_text_style = TextStyle {
         font_size: 33.0,
-        color: super::TEXT_COLOR,
+        color: TEXT_COLOR,
         ..Default::default()
     };
 

@@ -1,6 +1,5 @@
-mod chat;
-mod dispatcher;
 mod init;
+mod network;
 mod player;
 pub mod time;
 mod world;

@@ -1,4 +1,4 @@
-use crate::dispatcher::BroadcastTimer;
+use crate::network::dispatcher::BroadcastTimer;
 use bevy::prelude::*;
 use bevy_renet::renet::{DefaultChannel, RenetServer};
 use bincode::Options;

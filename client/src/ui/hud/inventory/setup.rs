@@ -3,7 +3,7 @@ use crate::constants::{
     HOTBAR_BORDER, HOTBAR_CELL_SIZE, HOTBAR_PADDING, MAX_HOTBAR_SLOTS, MAX_INVENTORY_SLOTS,
     TEXTURE_SIZE,
 };
-use crate::ui::{FloatingStack, InventoryCell, InventoryDialog, InventoryRoot};
+use crate::ui::hud::{FloatingStack, InventoryCell, InventoryDialog, InventoryRoot};
 use crate::world::MaterialResource;
 use crate::GameState;
 use bevy::{prelude::*, ui::FocusPolicy};

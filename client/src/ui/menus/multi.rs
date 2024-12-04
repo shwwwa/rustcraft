@@ -1,17 +1,16 @@
 use super::{MenuButtonAction, MenuState, ScrollingList};
-use crate::world::ClientWorldMap;
-use crate::{constants::SAVE_PATH, GameState, LoadWorldEvent};
-use bevy::prelude::Resource;
+use crate::constants::SERVER_LIST_SAVE_NAME;
+use crate::network::{TargetServer, TargetServerState};
+use crate::GameState;
 use bevy::prelude::*;
 use bevy::{
     asset::{AssetServer, Handle},
     color::Color,
     prelude::{
         BuildChildren, Button, ButtonBundle, Changed, Commands, Component, DespawnRecursiveExt,
-        Entity, EventWriter, ImageBundle, NextState, NodeBundle, Query, Res, ResMut, StateScoped,
-        Text, TextBundle, With,
+        Entity, ImageBundle, NodeBundle, Query, Res, StateScoped, TextBundle, With, Without,
     },
-    text::{Font, TextSection, TextStyle},
+    text::{Font, Text, TextSection, TextStyle},
     ui::{
         AlignContent, AlignItems, BackgroundColor, BorderColor, Display, FlexDirection,
         GridPlacement, GridTrack, Interaction, JustifyContent, Overflow, Style, UiImage, UiRect,
@@ -23,44 +22,45 @@ use bevy_simple_text_input::{
     TextInputBundle, TextInputInactive, TextInputPlaceholder, TextInputSettings,
     TextInputTextStyle, TextInputValue,
 };
+use ron::{from_str, ser::PrettyConfig};
 use shared::world::get_game_folder;
 use shared::GameFolderPaths;
-use std::io;
 use std::{
     fs,
+    io::Write,
     path::{Path, PathBuf},
 };
 
-pub struct WorldItem {
+#[derive(serde::Serialize, serde::Deserialize, Clone, Debug)]
+pub struct ServerItem {
     pub name: String,
+    pub ip: String,
 }
 
 #[derive(Component, Default)]
-pub struct WorldList {
-    pub worlds: HashMap<Entity, WorldItem>,
+pub struct ServerList {
+    pub servers: HashMap<Entity, ServerItem>,
 }
 
 #[derive(Component)]
 pub enum MultiplayerButtonAction {
     Add,
-    Load(Entity),
+    Connect(Entity),
     Delete(Entity),
 }
 
 #[derive(Component)]
-pub struct WorldNameInput;
+pub struct ServerIpInput;
 
-#[derive(Resource, Default, Debug, Clone)]
-pub struct SelectedWorld {
-    pub name: Option<String>,
-}
+#[derive(Component)]
+pub struct ServerNameInput;
 
 pub const BACKGROUND_COLOR: Color = Color::srgb(0.5, 0.5, 0.5);
 
-pub fn solo_menu_setup(
+pub fn multiplayer_menu_setup(
     mut commands: Commands,
     assets: Res<AssetServer>,
-    paths: Res<GameFolderPaths>,
+    _paths: Res<GameFolderPaths>,
 ) {
     let font: Handle<Font> = assets.load("./fonts/RustCraftRegular-Bmg3.otf");
     let txt_style = TextStyle {
@@ -86,7 +86,7 @@ pub fn solo_menu_setup(
 
     commands
         .spawn((
-            StateScoped(MenuState::Solo),
+            StateScoped(MenuState::Multi),
             NodeBundle {
                 style: Style {
                     width: Val::Vw(100.0),
@@ -103,7 +103,7 @@ pub fn solo_menu_setup(
         ))
         .with_children(|root| {
             root.spawn(TextBundle {
-                text: Text::from_section("World list", txt_style.clone()),
+                text: Text::from_section("Server list", txt_style.clone()),
                 style: Style {
                     border: UiRect::all(Val::Px(1.)),
                     flex_direction: FlexDirection::Column,
@@ -139,8 +139,8 @@ pub fn solo_menu_setup(
                         ..Default::default()
                     },
                     ScrollingList { position: 0. },
-                    WorldList {
-                        worlds: HashMap::new(),
+                    ServerList {
+                        servers: HashMap::new(),
                     },
                 ));
             });
@@ -168,14 +168,14 @@ pub fn solo_menu_setup(
                         },
                         ..Default::default()
                     },
-                    WorldNameInput,
+                    ServerNameInput,
                     TextInputBundle {
                         settings: TextInputSettings {
                             retain_on_submit: true,
                             mask_character: None,
                         },
                         placeholder: TextInputPlaceholder {
-                            value: "World name".into(),
+                            value: "Server name".into(),
                             text_style: Some(txt_style_inactive.clone()),
                         },
                         inactive: TextInputInactive(true),
@@ -184,23 +184,42 @@ pub fn solo_menu_setup(
                     },
                 ));
 
+                wrapper.spawn((
+                    NodeBundle {
+                        border_color: BorderColor(BACKGROUND_COLOR),
+                        background_color: BackgroundColor(Color::BLACK),
+                        style: btn_style.clone(),
+                        ..Default::default()
+                    },
+                    TextInputBundle {
+                        settings: TextInputSettings {
+                            retain_on_submit: true,
+                            mask_character: None,
+                        },
+                        placeholder: TextInputPlaceholder {
+                            value: "Server IP".into(),
+                            text_style: Some(txt_style_inactive.clone()),
+                        },
+                        inactive: TextInputInactive(true),
+                        text_style: TextInputTextStyle(txt_style.clone()),
+                        ..Default::default()
+                    },
+                    ServerIpInput,
+                ));
+
                 wrapper
                     .spawn((
                         ButtonBundle {
                             border_color: BorderColor(Color::BLACK),
                             background_color: BackgroundColor(BACKGROUND_COLOR),
-                            style: {
-                                let mut style = btn_style.clone();
-                                style.grid_column = GridPlacement::span(2);
-                                style
-                            },
+                            style: btn_style.clone(),
                             ..Default::default()
                         },
                         MultiplayerButtonAction::Add,
                     ))
                     .with_children(|btn| {
                         btn.spawn(TextBundle {
-                            text: Text::from_section("Create world", txt_style.clone()),
+                            text: Text::from_section("Add server", txt_style.clone()),
                             ..Default::default()
                         });
                     });
@@ -229,59 +248,16 @@ pub fn solo_menu_setup(
         });
 }
 
-pub fn list_worlds(
-    mut commands: Commands,
-    assets: Res<AssetServer>,
-    mut list_query: Query<(&mut WorldList, Entity)>,
-    mut world_map: ResMut<ClientWorldMap>,
-    game_paths: Res<GameFolderPaths>,
-) {
-    let (mut list, list_entity) = list_query.single_mut();
-
-    // create save folder if it not exist
-    let save_path: PathBuf = get_game_folder(Some(&game_paths)).join(SAVE_PATH);
-    let path: &Path = save_path.as_path();
-    if !fs::exists(path).unwrap() && fs::create_dir_all(path).is_ok() {
-        info!("Successfully created the saves folder : {}", path.display());
-    }
-
-    let paths = fs::read_dir(path).unwrap();
-
-    for path in paths {
-        let path_str = path.unwrap().file_name().into_string().unwrap();
-
-        if path_str.ends_with(".ron") {
-            add_world_item(
-                path_str.replace(".ron", ""),
-                &mut commands,
-                &assets,
-                &mut list,
-                list_entity,
-                &mut world_map,
-                &game_paths,
-            );
-        }
-    }
-}
-
-fn add_world_item(
+pub fn add_server_item(
     name: String,
+    ip: String,
     commands: &mut Commands,
     asset_server: &Res<AssetServer>,
-    list: &mut WorldList,
+    list: &mut ServerList,
     list_entity: Entity,
-    world_map: &mut ClientWorldMap,
-    paths: &Res<GameFolderPaths>,
+    _paths: &Res<GameFolderPaths>,
 ) {
-    info!(
-        "Adding world to list : name = {:?}, entity={:?}",
-        name, list_entity
-    );
-
-    let base_path = &paths.assets_folder_path;
-
-    // udpate the name of the world_map
-    world_map.name = name.clone();
+    info!("Adding server to list : name = {:?}, ip = {:?}", name, ip);
 
     let btn_style = Style {
         display: Display::Flex,
@@ -298,7 +274,7 @@ fn add_world_item(
         ..Default::default()
     };
 
-    let world = commands
+    let server = commands
         .spawn(NodeBundle {
             border_color: BorderColor(BACKGROUND_COLOR),
             style: Style {
@@ -317,14 +293,14 @@ fn add_world_item(
 
     let play_btn = commands
         .spawn((
-            MultiplayerButtonAction::Load(world),
+            MultiplayerButtonAction::Connect(server),
             ButtonBundle {
                 style: btn_style.clone(),
                 ..Default::default()
             },
         ))
         .with_children(|btn| {
-            let icon = asset_server.load(format!("{}/graphics/play.png", base_path));
+            let icon = asset_server.load("./graphics/play.png");
             btn.spawn(ImageBundle {
                 image: UiImage::new(icon),
                 style: img_style.clone(),
@@ -335,14 +311,14 @@ fn add_world_item(
 
     let delete_btn = commands
         .spawn((
-            MultiplayerButtonAction::Delete(world),
+            MultiplayerButtonAction::Delete(server),
             ButtonBundle {
                 style: btn_style.clone(),
                 ..Default::default()
             },
         ))
         .with_children(|btn| {
-            let icon = asset_server.load(format!("{}/graphics/trash.png", base_path));
+            let icon = asset_server.load("./graphics/trash.png");
             btn.spawn(ImageBundle {
                 image: UiImage::new(icon),
                 style: img_style.clone(),
@@ -354,14 +330,24 @@ fn add_world_item(
     let txt = commands
         .spawn(TextBundle {
             text: Text {
-                sections: vec![TextSection {
-                    value: name.clone() + "\n",
-                    style: TextStyle {
-                        font: asset_server.load("./fonts/RustCraftRegular-Bmg3.otf"),
-                        font_size: 20.,
-                        color: Color::WHITE,
+                sections: vec![
+                    TextSection {
+                        value: name.clone() + "\n",
+                        style: TextStyle {
+                            font: asset_server.load("./fonts/RustCraftRegular-Bmg3.otf"),
+                            font_size: 20.,
+                            color: Color::WHITE,
+                        },
                     },
-                }],
+                    TextSection {
+                        value: ip.clone(),
+                        style: TextStyle {
+                            font: asset_server.load("./fonts/RustCraftRegular-Bmg3.otf"),
+                            font_size: 15.,
+                            color: Color::srgb(0.4, 0.4, 0.4),
+                        },
+                    },
+                ],
                 ..Default::default()
             },
             style: Style {
@@ -374,47 +360,158 @@ fn add_world_item(
         .id();
 
     commands
-        .entity(world)
+        .entity(server)
         .push_children(&[play_btn, delete_btn, txt]);
 
-    commands.entity(list_entity).push_children(&[world]);
+    commands.entity(list_entity).push_children(&[server]);
 
-    list.worlds.insert(world, WorldItem { name: name.clone() });
+    list.servers.insert(
+        server,
+        ServerItem {
+            name: name.clone(),
+            ip: ip.clone(),
+        },
+    );
 }
 
-fn generate_new_world_name(world_list: &WorldList) -> String {
-    let mut index = 1;
+pub fn load_server_list(
+    mut commands: Commands,
+    assets: Res<AssetServer>,
+    mut list_query: Query<(&mut ServerList, Entity)>,
+    paths: Res<GameFolderPaths>,
+) {
+    let (mut list, list_entity) = list_query.single_mut();
 
-    loop {
-        let candidate = format!("new_world_{}", index);
-        if !world_list
-            .worlds
-            .values()
-            .any(|world| world.name == candidate)
-        {
-            return candidate;
-        }
-        index += 1;
+    let game_folder_path: PathBuf = get_game_folder(Some(&paths)).join(SERVER_LIST_SAVE_NAME);
+    let path: &Path = game_folder_path.as_path();
+
+    // If no server list save, returns
+    if !fs::exists(path).unwrap() {
+        error!("No server list found at {:?}", path);
+        return;
+    }
+
+    let txt = fs::read_to_string(path);
+    if txt.is_err() {
+        error!("Failed to read server list from {:?}", path);
+        return;
+    }
+    let txt = txt.unwrap();
+
+    // Check if the file is empty
+    if txt.trim().is_empty() {
+        error!("Server list file is empty at {:?}", path);
+        add_server_item(
+            "localhost".into(),
+            "127.0.0.1:8000".into(),
+            &mut commands,
+            &assets,
+            &mut list,
+            list_entity,
+            &paths,
+        );
+        return;
+    }
+
+    let maybe_servers = from_str::<Vec<ServerItem>>(&txt);
+    if maybe_servers.is_err() {
+        error!("Failed to parse server list from {:?}", path);
+        return;
+    }
+    let servers = maybe_servers.unwrap();
+
+    // Check if localhost already exists, if not, create it
+    let localhost_exists = servers.iter().any(|srv| srv.ip == "127.0.0.1:8000");
+    if !localhost_exists {
+        add_server_item(
+            "localhost".into(),
+            "127.0.0.1:8000".into(),
+            &mut commands,
+            &assets,
+            &mut list,
+            list_entity,
+            &paths,
+        );
+    }
+
+    for srv in servers {
+        add_server_item(
+            srv.name,
+            srv.ip,
+            &mut commands,
+            &assets,
+            &mut list,
+            list_entity,
+            &paths,
+        );
     }
 }
 
-pub fn solo_action(
-    (interaction_query, mut name_query, mut list_query): (
+pub fn save_server_list(list: Query<&ServerList>, game_folder_path: Res<GameFolderPaths>) {
+    let list = list.get_single();
+    let list = match list {
+        Ok(v) => v,
+        Err(_) => {
+            let count = list.iter().count();
+            if count > 1 {
+                warn!(
+                    "save_server_list: Multiple ServerList components found ({})",
+                    count
+                );
+                return;
+            }
+            warn!("save_server_list: list is not single");
+            return;
+        }
+    };
+
+    // Chemin complet du fichier de sauvegarde
+    let save_path: PathBuf = get_game_folder(Some(&game_folder_path)).join(SERVER_LIST_SAVE_NAME);
+
+    // Config de sérialisation RON
+    let pretty_config = PrettyConfig::new()
+        .with_depth_limit(3)
+        .with_separate_tuple_members(true)
+        .with_enumerate_arrays(true);
+
+    // Convertit la liste des serveurs en une chaîne RON
+    let server_items: Vec<ServerItem> = list.servers.values().cloned().collect();
+    match ron::ser::to_string_pretty(&server_items, pretty_config) {
+        Ok(data) => {
+            // Crée le fichier de sauvegarde et écrit les données
+            match fs::File::create(&save_path) {
+                Ok(mut file) => {
+                    if file.write_all(data.as_bytes()).is_ok() {
+                        info!("Server list saved to {:?}", save_path);
+                    } else {
+                        error!("Failed to write server list to {:?}", save_path);
+                    }
+                }
+                Err(e) => error!(
+                    "Failed to create server list file at {:?}: {}",
+                    save_path, e
+                ),
+            }
+        }
+        Err(e) => error!("Failed to serialize server list: {}", e),
+    }
+}
+
+pub fn multiplayer_action(
+    queries: (
         Query<(&Interaction, &MultiplayerButtonAction), (Changed<Interaction>, With<Button>)>,
-        Query<&mut TextInputValue, With<WorldNameInput>>,
-        Query<(Entity, &mut WorldList), With<WorldList>>,
-    ),
-    (asset_server, mut menu_state, mut game_state, mut world_map, mut selected_world): (
-        Res<AssetServer>,
-        ResMut<NextState<MenuState>>,
-        ResMut<NextState<GameState>>,
-        ResMut<ClientWorldMap>,
-        ResMut<SelectedWorld>,
+        Query<&TextInputValue, (With<ServerNameInput>, Without<ServerIpInput>)>,
+        Query<&TextInputValue, (With<ServerIpInput>, Without<ServerNameInput>)>,
+        Query<(Entity, &mut ServerList), With<ServerList>>,
     ),
     mut commands: Commands,
-    mut load_event: EventWriter<LoadWorldEvent>,
+    asset_server: Res<AssetServer>,
+    mut target_server: ResMut<TargetServer>,
+    mut game_state: ResMut<NextState<GameState>>,
+    mut menu_state: ResMut<NextState<MenuState>>,
     paths: Res<GameFolderPaths>,
 ) {
+    let (interaction_query, name_query, ip_query, mut list_query) = queries;
     if list_query.is_empty() {
         return;
     }
@@ -425,74 +522,41 @@ pub fn solo_action(
         if *interaction == Interaction::Pressed {
             match *menu_button_action {
                 MultiplayerButtonAction::Add => {
-                    if !name_query.is_empty() {
-                        let mut name = name_query.single_mut();
+                    if !name_query.is_empty() && !ip_query.is_empty() {
+                        let name = name_query.single();
+                        let ip = ip_query.single();
 
-                        // if no name, create default one
-                        let new_name = if name.0.is_empty() {
-                            generate_new_world_name(&list)
-                        } else {
-                            name.0.clone()
-                        };
-
-                        add_world_item(
-                            new_name,
+                        add_server_item(
+                            name.0.clone(),
+                            ip.0.clone(),
                             &mut commands,
                             &asset_server,
                             &mut list,
                             entity,
-                            &mut world_map,
                             &paths,
                         );
-
-                        name.0 = "".into();
                     }
                 }
-                MultiplayerButtonAction::Load(world_entity) => {
-                    if let Some(world) = list.worlds.get(&world_entity) {
-                        // update ressource name
-                        selected_world.name = Some(world.name.clone());
+                MultiplayerButtonAction::Connect(serv_entity) => {
+                    if let Some(srv) = list.servers.get(&serv_entity) {
+                        info!("Server : name={}, ip={}", srv.name, srv.ip);
 
-                        load_event.send(LoadWorldEvent {
-                            world_name: world.name.clone(),
-                        });
+                        // TODO : try to connect player with srv.ip provided
+                        // TODO: Recover from another place
+                        target_server.address = Some(srv.ip.parse().unwrap());
+                        target_server.state = TargetServerState::Initial;
                         game_state.set(GameState::PreGameLoading);
                         menu_state.set(MenuState::Disabled);
                     }
                 }
-                MultiplayerButtonAction::Delete(world_entity) => {
-                    if let Some(world) = list.worlds.get(&world_entity) {
-                        if let Err(e) = delete_save_files(&world.name, &paths) {
-                            error!("Error while deleting save files: {}", e);
-                        }
-                        list.worlds.remove(&world_entity);
-                    }
-                    commands.entity(entity).remove_children(&[world_entity]);
-                    commands.entity(world_entity).despawn_recursive();
+                MultiplayerButtonAction::Delete(serv_entity) => {
+                    debug!("Old list : {:?}", list.servers);
+                    commands.entity(entity).remove_children(&[serv_entity]);
+                    commands.entity(serv_entity).despawn_recursive();
+                    list.servers.remove(&serv_entity);
+                    debug!("New list : {:?}", list.servers);
                 }
             }
         }
     }
-}
-
-pub fn delete_save_files(
-    world_name: &str,
-    game_folder_path: &Res<GameFolderPaths>,
-) -> Result<(), io::Error> {
-    // Delete `world_save.ron`
-    match fs::remove_file(format!(
-        "{}{}.ron",
-        get_game_folder(Some(&game_folder_path))
-            .join(SAVE_PATH)
-            .display(),
-        world_name
-    )) {
-        Ok(_) => info!("Successfully deleted world"),
-        Err(ref e) if e.kind() == io::ErrorKind::NotFound => {
-            error!("world_save.ron not found, skipping.")
-        }
-        Err(e) => error!("Failed to delete world: {}", e),
-    }
-
-    Ok(())
 }

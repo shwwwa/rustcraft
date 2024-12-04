@@ -1,4 +1,4 @@
-use crate::ui::UIMode;
+use crate::ui::hud::UIMode;
 use bevy::prelude::*;
 use bevy::window::{CursorGrabMode, PrimaryWindow};
 

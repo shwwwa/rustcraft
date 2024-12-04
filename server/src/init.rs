@@ -1,3 +1,4 @@
+use crate::network::dispatcher::{self, setup_resources_and_events};
 use bevy::{
     diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin},
     prelude::*,
@@ -14,7 +15,6 @@ use std::{collections::HashMap, net::IpAddr};
 
 use crate::world::load_from_file::{load_world_map, load_world_seed, load_world_time};
 
-use crate::dispatcher;
 use bevy_renet::renet::transport::{ServerAuthentication, ServerConfig};
 use bevy_renet::transport::NetcodeServerPlugin;
 use std::net::{SocketAddr, UdpSocket};
@@ -87,7 +87,7 @@ pub fn init(socket: UdpSocket, config: GameServerConfig, game_folder_path: Strin
 
     add_netcode_network(&mut app, socket);
 
-    dispatcher::setup_resources_and_events(&mut app);
+    setup_resources_and_events(&mut app);
 
     // Load world from files
     let world_map = match load_world_map(world_name, &app) {

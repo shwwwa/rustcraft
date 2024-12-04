@@ -1,8 +1,4 @@
-pub mod chat;
-pub mod debug;
-pub mod hotbar;
-pub mod inventory;
-pub mod pause;
-pub mod reticle;
-
-pub use inventory::*;
+pub mod button;
+pub mod hud;
+pub mod menus;
+pub mod style;

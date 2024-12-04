@@ -1,7 +1,7 @@
 use crate::init::ServerTime;
 use crate::init::TickCounter;
+use crate::network::utils::format_bytes;
 use crate::world::generation::generate_chunk;
-use crate::world::utils::format_bytes;
 use bevy::math::IVec3;
 use bevy::prelude::*;
 use bevy_ecs::system::ResMut;
