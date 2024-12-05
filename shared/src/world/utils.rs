@@ -6,10 +6,10 @@ use crate::CHUNK_SIZE;
 
 pub fn get_game_folder(game_folder_path: Option<&GameFolderPaths>) -> PathBuf {
     if let Some(folder_path) = game_folder_path {
-        // Chemin custom, convertir en chemin absolu relatif à l'exécutable
+        // custom path, convert to absolute path 
         let mut exe_path = env::current_exe().expect("Failed to get executable path");
         exe_path.pop(); // Remove executable name
-        return exe_path.join(&folder_path.game_folder_path); // Joindre le chemin relatif à l'exécutable
+        exe_path.join(&folder_path.game_folder_path)
     } else {
         panic!();
     }

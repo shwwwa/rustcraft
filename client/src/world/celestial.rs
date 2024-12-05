@@ -145,7 +145,7 @@ pub fn update_celestial_bodies(
         }
 
         // Calculate the angle for the rotation (normalization between 0 and 1)
-        let normalized_time = (LOCAL_TIME % DAY_DURATION as f32) / DAY_DURATION as f32;
+        let normalized_time = (LOCAL_TIME % DAY_DURATION) / DAY_DURATION;
         let angle = normalized_time * 2.0 * PI;
 
         // Apply the rotation to celestial bodies

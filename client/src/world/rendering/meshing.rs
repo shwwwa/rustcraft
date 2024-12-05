@@ -167,7 +167,6 @@ pub fn rotate_vertices(v: &[f32; 3], direction: &BlockDirection) -> [f32; 3] {
     ]
 }
 
-#[allow(clippy::too_many_arguments)]
 fn render_face(
     local_vertices: &mut Vec<[f32; 3]>,
     local_indices: &mut Vec<u32>,

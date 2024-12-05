@@ -46,7 +46,6 @@ pub fn register_systems(app: &mut App) {
     app.add_systems(Update, update_server_time);
 }
 
-#[allow(clippy::type_complexity)]
 fn server_update_system(
     mut server_events: EventReader<ServerEvent>,
     (mut server, mut chat_conversation, mut lobby, tick): (

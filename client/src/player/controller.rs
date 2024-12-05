@@ -254,25 +254,23 @@ pub fn player_movement_system(
     }
 
     // Move the player (xy plane only), only if there are no blocks and UI is closed
-    if first_chunk_received.0 == true {
-        if direction.length_squared() > 0.0 {
-            direction = direction.normalize();
+    if first_chunk_received.0 && direction.length_squared() > 0.0 {
+        direction = direction.normalize();
 
-            // Déplacement sur l'axe X
-            let new_pos_x = player_transform.translation
-                + Vec3::new(direction.x, 0.0, 0.0) * speed * time.delta_seconds();
+        // Déplacement sur l'axe X
+        let new_pos_x = player_transform.translation
+            + Vec3::new(direction.x, 0.0, 0.0) * speed * time.delta_seconds();
 
-            if player.is_flying || !check_player_collision(new_pos_x, &player, &world_map) {
-                player_transform.translation.x = new_pos_x.x;
-            }
+        if player.is_flying || !check_player_collision(new_pos_x, &player, &world_map) {
+            player_transform.translation.x = new_pos_x.x;
+        }
 
-            // Déplacement sur l'axe Z
-            let new_pos_z = player_transform.translation
-                + Vec3::new(0.0, 0.0, direction.z) * speed * time.delta_seconds();
+        // Déplacement sur l'axe Z
+        let new_pos_z = player_transform.translation
+            + Vec3::new(0.0, 0.0, direction.z) * speed * time.delta_seconds();
 
-            if player.is_flying || !check_player_collision(new_pos_z, &player, &world_map) {
-                player_transform.translation.z = new_pos_z.z;
-            }
+        if player.is_flying || !check_player_collision(new_pos_z, &player, &world_map) {
+            player_transform.translation.z = new_pos_z.z;
         }
     }
 
@@ -290,7 +288,7 @@ pub fn player_movement_system(
 
     // apply gravity and verify vertical collisions
     let mut new_y = player_transform.translation.y;
-    if first_chunk_received.0 == true {
+    if first_chunk_received.0 {
         new_y = player_transform.translation.y + player.vertical_velocity * time.delta_seconds();
     }
 

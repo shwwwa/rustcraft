@@ -486,7 +486,7 @@ pub fn delete_save_files(
     // Delete `world_save.ron`
     match fs::remove_file(format!(
         "{}{}.ron",
-        get_game_folder(Some(&game_folder_path))
+        get_game_folder(Some(game_folder_path))
             .join(SAVE_PATH)
             .display(),
         world_name

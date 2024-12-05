@@ -42,7 +42,7 @@ impl VoxelShape {
     pub fn create_from_block(block: &BlockData) -> VoxelShape {
         match block.id {
             BlockId::Grass => {
-                let mut shape = Self::full_cube(&block);
+                let mut shape = Self::full_cube(block);
 
                 // Apply grass-specific textures and coloring
                 for (index, face) in shape.faces.iter_mut().enumerate() {
@@ -57,13 +57,13 @@ impl VoxelShape {
                 shape
             }
             BlockId::OakLog | BlockId::SpruceLog => {
-                let mut shape = Self::full_cube(&block);
+                let mut shape = Self::full_cube(block);
                 shape.faces[0].texture += "Top";
                 shape.faces[1].texture += "Top";
                 shape
             }
             BlockId::OakLeaves | BlockId::SpruceLeaves => {
-                let mut shape = Self::full_cube(&block);
+                let mut shape = Self::full_cube(block);
 
                 // Apply leaves color
                 for face in shape.faces.iter_mut() {
@@ -75,7 +75,7 @@ impl VoxelShape {
                 shape
             }
             BlockId::Debug => {
-                let mut shape = Self::full_cube(&block);
+                let mut shape = Self::full_cube(block);
                 shape.faces[0].texture = "Top".into();
                 shape.faces[1].texture = "Down".into();
                 shape.faces[2].texture = "Front".into();

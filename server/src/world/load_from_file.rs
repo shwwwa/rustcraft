@@ -25,7 +25,7 @@ pub fn load_world_data(
     let game_folder_path = app.world().get_resource::<GameFolderPaths>().unwrap();
 
     // Construire le chemin complet du fichier
-    let file_path: PathBuf = get_game_folder(Some(&game_folder_path))
+    let file_path: PathBuf = get_game_folder(Some(game_folder_path))
         .join(SAVE_PATH)
         .join(format!("{file_name}.ron"));
     let path: &Path = file_path.as_path();

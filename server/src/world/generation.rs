@@ -194,7 +194,7 @@ pub fn generate_chunk(chunk_pos: IVec3, seed: u32) -> ServerChunk {
                 let block_pos = IVec3::new(dx, dy, dz);
 
                 chunk.map.insert(
-                    block_pos.clone(),
+                    block_pos,
                     BlockData::new(block, false, BlockDirection::Front),
                 );
 

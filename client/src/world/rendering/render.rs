@@ -70,7 +70,6 @@ fn update_chunk(
     // debug!("ClientChunk updated : len={}", chunk.map.len());
 }
 
-#[allow(clippy::too_many_arguments)]
 pub fn world_render_system(
     mut world_map: ResMut<ClientWorldMap>,
     material_resource: Res<MaterialResource>,
