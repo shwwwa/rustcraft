@@ -117,11 +117,11 @@ pub fn setup_materials(
     // Load images of all blocks defined in the enum
 
     let blocks_path = get_game_folder(Some(&paths))
-        .join(paths.assets_folder_path.clone())
+        .join("data/")
         .join(&texture_path.path)
         .join("blocks/");
     let items_path = get_game_folder(Some(&paths))
-        .join(paths.assets_folder_path.clone())
+        .join("data/")
         .join(&texture_path.path)
         .join("items/");
 
@@ -223,8 +223,6 @@ fn build_atlas<T: GameElementId>(
         // Not all images are loaded yet
         return;
     }
-
-    println!("Debug handle : {:?}", atlas_handles.handles[0]);
 
     // Assuming each image is 16x16 and there are `n` images
     let image_count: usize = loaded_images.len();
