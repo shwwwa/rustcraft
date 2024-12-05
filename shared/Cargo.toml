@@ -11,3 +11,5 @@ bevy_renet = { version = "0.0.12", features = ["serde", "transport"] }
 bevy = "0.14.2"
 rand = "0.8"
 
+[lints]
+workspace = true

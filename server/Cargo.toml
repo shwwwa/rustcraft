@@ -28,3 +28,6 @@ path = "src/lib.rs"
 [[bin]]
 name = "server"
 path = "src/main.rs"
+
+[lints]
+workspace = true
