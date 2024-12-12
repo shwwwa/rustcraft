@@ -33,7 +33,7 @@ fn generate_tree(chunk: &mut ServerChunk, x: i32, y: i32, z: i32, trunk: BlockId
 }
 
 fn generate_cactus(chunk: &mut ServerChunk, x: i32, y: i32, z: i32, cactus: BlockId) {
-    let cactus_height = 1 + rand::random::<u8>() % 3;
+    let cactus_height = 2 + rand::random::<u8>() % 2;
     for dy in 0..cactus_height {
         chunk.map.insert(
             IVec3::new(x, y + dy as i32, z),
@@ -43,14 +43,16 @@ fn generate_cactus(chunk: &mut ServerChunk, x: i32, y: i32, z: i32, cactus: Bloc
 }
 
 pub fn determine_biome(temperature: f64, humidity: f64) -> BiomeType {
-    if temperature > 0.7 {
+    if temperature > 0.6 {
         if humidity > 0.5 {
             BiomeType::Forest
         } else {
             BiomeType::Desert
         }
-    } else if temperature > 0.4 {
-        if humidity > 0.5 {
+    } else if temperature > 0.3 {
+        if humidity > 0.7 {
+            BiomeType::FlowerPlains
+        } else if humidity > 0.5 {
             BiomeType::Plains
         } else {
             BiomeType::MediumMountain
@@ -59,7 +61,7 @@ pub fn determine_biome(temperature: f64, humidity: f64) -> BiomeType {
         if humidity > 0.5 {
             BiomeType::IcePlain
         } else {
-            BiomeType::HighMountain
+            BiomeType::HighMountainGrass
         }
     } else {
         panic!();
@@ -142,7 +144,7 @@ pub fn generate_chunk(chunk_pos: IVec3, seed: u32) -> ServerChunk {
     let humidity_perlin = Perlin::new(seed + 2);
 
     let scale = 0.1;
-    let biome_scale = 0.02;
+    let biome_scale = 0.01;
     let cx = chunk_pos.x;
     let cy = chunk_pos.y;
     let cz = chunk_pos.z;
@@ -208,14 +210,66 @@ pub fn generate_chunk(chunk_pos: IVec3, seed: u32) -> ServerChunk {
                     BlockData::new(block, false, BlockDirection::Front),
                 );
 
-                // Add flora in some biomes
+                // Add flora in biomes
                 if y == terrain_height && terrain_height >= 1 {
+                    let above_surface_pos = IVec3::new(dx, terrain_height + 1, dz);
+
+                    // Add flowers
+                    let flower_chance = rand::random::<f32>();
+                    match biome_type {
+                        BiomeType::FlowerPlains => {
+                            // High probability for flowers in Flower Plains
+                            if flower_chance < 0.1 {
+                                let flower_type = if rand::random::<f32>() < 0.5 {
+                                    BlockId::Dandelion
+                                } else {
+                                    BlockId::Poppy
+                                };
+
+                                chunk.map.insert(
+                                    block_pos.with_y(block_pos.y + 1),
+                                    BlockData::new(flower_type, false, BlockDirection::Front),
+                                );
+                            }
+                        }
+                        BiomeType::Plains | BiomeType::Forest | BiomeType::MediumMountain => {
+                            // Low probability for flowers in Plains, Forest, Medium Mountain
+                            if flower_chance < 0.02 {
+                                let flower_type = if rand::random::<f32>() < 0.5 {
+                                    BlockId::Dandelion
+                                } else {
+                                    BlockId::Poppy
+                                };
+
+                                chunk.map.insert(
+                                    block_pos.with_y(block_pos.y + 1),
+                                    BlockData::new(flower_type, false, BlockDirection::Front),
+                                );
+                            }
+                        }
+                        _ => {}
+                    }
+
+                    // Add tall grass
+                    if biome_type != BiomeType::HighMountainGrass
+                        && biome_type != BiomeType::Desert
+                        && biome_type != BiomeType::IcePlain
+                    {
+                        let tall_grass_chance = rand::random::<f32>();
+                        if tall_grass_chance < 0.15 {
+                            chunk.map.insert(
+                                block_pos.with_y(block_pos.y + 1),
+                                BlockData::new(BlockId::TallGrass, false, BlockDirection::Front),
+                            );
+                        }
+                    }
+
+                    // Add trees
+                    let tree_chance = rand::random::<f32>();
                     match biome_type {
                         BiomeType::Forest => {
-                            let tree_chance = rand::random::<f32>();
-                            if tree_chance < 0.05 {
-                                // ensure the area above is clear before generating the tree
-                                let above_surface_pos = IVec3::new(dx, terrain_height + 1, dz);
+                            // High probability for trees in Forest
+                            if tree_chance < 0.1 {
                                 if !chunk.map.contains_key(&above_surface_pos) {
                                     generate_tree(
                                         &mut chunk,
@@ -226,67 +280,34 @@ pub fn generate_chunk(chunk_pos: IVec3, seed: u32) -> ServerChunk {
                                         BlockId::OakLeaves,
                                     );
                                 }
-                            } else if tree_chance < 0.075 {
-                                chunk.map.insert(
-                                    block_pos.with_y(block_pos.y + 1),
-                                    BlockData::new(
-                                        BlockId::Dandelion,
-                                        false,
-                                        BlockDirection::Front,
-                                    ),
-                                );
-                            } else if tree_chance < 0.1 {
-                                chunk.map.insert(
-                                    block_pos.with_y(block_pos.y + 1),
-                                    BlockData::new(BlockId::Poppy, false, BlockDirection::Front),
-                                );
                             }
                         }
-                        BiomeType::Desert => {
-                            let cactus_chance = rand::random::<f32>();
-                            if cactus_chance < 0.02 {
-                                let above_surface_pos = IVec3::new(dx, terrain_height + 1, dz);
-                                if !chunk.map.contains_key(&above_surface_pos) {
-                                    generate_cactus(&mut chunk, dx, dy + 1, dz, BlockId::Cactus);
-                                }
-                            }
-                        }
-                        BiomeType::IcePlain => {
-                            let tree_chance = rand::random::<f32>();
+                        BiomeType::FlowerPlains | BiomeType::MediumMountain => {
+                            // Medium probability for trees in Flower Plains and Medium Mountain
                             if tree_chance < 0.05 {
-                                // ensure the area above is clear before generating the tree
-                                let above_surface_pos = IVec3::new(dx, terrain_height + 1, dz);
                                 if !chunk.map.contains_key(&above_surface_pos) {
                                     generate_tree(
                                         &mut chunk,
                                         dx,
                                         dy + 1,
                                         dz,
-                                        BlockId::SpruceLog,
-                                        BlockId::SpruceLeaves,
+                                        BlockId::OakLog,
+                                        BlockId::OakLeaves,
                                     );
                                 }
                             }
                         }
-                        BiomeType::Plains => {
-                            let flower_chance = rand::random::<f32>();
-                            if flower_chance < 0.075 {
-                                chunk.map.insert(
-                                    block_pos.with_y(block_pos.y + 1),
-                                    BlockData::new(
-                                        BlockId::Dandelion,
-                                        false,
-                                        BlockDirection::Front,
-                                    ),
-                                );
-                            } else if flower_chance < 0.1 {
-                                chunk.map.insert(
-                                    block_pos.with_y(block_pos.y + 1),
-                                    BlockData::new(BlockId::Poppy, false, BlockDirection::Front),
-                                );
+                        _ => {}
+                    }
+
+                    // Add cactus in Desert
+                    if biome_type == BiomeType::Desert {
+                        let cactus_chance = rand::random::<f32>();
+                        if cactus_chance < 0.01 {
+                            if !chunk.map.contains_key(&above_surface_pos) {
+                                generate_cactus(&mut chunk, dx, dy + 1, dz, BlockId::Cactus);
                             }
                         }
-                        _ => {}
                     }
                 }
             }

@@ -46,9 +46,10 @@ pub enum BiomeType {
     Plains,
     Forest,
     MediumMountain,
-    HighMountain,
+    HighMountainGrass,
     Desert,
     IcePlain,
+    FlowerPlains,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -83,9 +84,9 @@ pub fn get_biome_data(biome_type: BiomeType) -> Biome {
             surface_block: BlockId::Grass,
             sub_surface_block: BlockId::Dirt,
         },
-        BiomeType::HighMountain => Biome {
-            biome_type: BiomeType::HighMountain,
-            base_height: 80,
+        BiomeType::HighMountainGrass => Biome {
+            biome_type: BiomeType::HighMountainGrass,
+            base_height: 75,
             height_variation: 7,
             surface_block: BlockId::Grass,
             sub_surface_block: BlockId::Dirt,
@@ -103,6 +104,13 @@ pub fn get_biome_data(biome_type: BiomeType) -> Biome {
             height_variation: 1,
             surface_block: BlockId::Snow,
             sub_surface_block: BlockId::Ice,
+        },
+        BiomeType::FlowerPlains => Biome {
+            biome_type: BiomeType::FlowerPlains,
+            base_height: 64,
+            height_variation: 1,
+            surface_block: BlockId::Grass,
+            sub_surface_block: BlockId::Dirt,
         },
     }
 }
