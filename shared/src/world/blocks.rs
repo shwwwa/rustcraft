@@ -33,6 +33,7 @@ pub enum BlockId {
     Bedrock,
     Dandelion,
     Poppy,
+    TallGrass,
     Cobblestone,
     Snow,
     SpruceLeaves,
@@ -81,7 +82,7 @@ pub enum BlockTransparency {
 impl BlockId {
     pub fn has_hitbox(&self) -> bool {
         match *self {
-            BlockId::Dandelion | BlockId::Poppy => false,
+            BlockId::Dandelion | BlockId::Poppy | BlockId::TallGrass => false,
             _ => true,
         }
     }
@@ -146,6 +147,7 @@ impl BlockId {
             BlockId::Ice => vec![(1, ItemId::Ice, 1)],
             BlockId::Dandelion => vec![(1, ItemId::Dandelion, 1)],
             BlockId::Poppy => vec![(1, ItemId::Dandelion, 1)],
+            BlockId::TallGrass => vec![(1, ItemId::TallGrass, 1)],
             BlockId::SpruceLog => vec![(1, ItemId::SpruceLog, 1)],
             BlockId::Snow => vec![(1, ItemId::Snowball, 4)],
             _ => vec![],
@@ -161,7 +163,7 @@ impl BlockId {
 
     pub fn get_visibility(&self) -> BlockTransparency {
         match *self {
-            Self::Dandelion | Self::Poppy => BlockTransparency::Decoration,
+            Self::Dandelion | Self::Poppy | Self::TallGrass => BlockTransparency::Decoration,
             Self::Glass | Self::OakLeaves | Self::SpruceLeaves => BlockTransparency::Transparent,
             _ => BlockTransparency::Solid,
         }

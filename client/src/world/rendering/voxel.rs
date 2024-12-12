@@ -85,6 +85,18 @@ impl VoxelShape {
                 shape
             }
             BlockId::Poppy | BlockId::Dandelion => Self::flora(block),
+            BlockId::TallGrass => {
+                let mut shape = Self::flora(block);
+
+                // Apply grass color to TallGrass
+                for face in shape.faces.iter_mut() {
+                    for col in face.colors.iter_mut() {
+                        *col = GRASS_COLOR;
+                    }
+                }
+
+                shape
+            }
             _ => Self::full_cube(block),
         }
     }
