@@ -1,5 +1,3 @@
-// File: ./client/src/ui/menus/home.rs
-
 use bevy::prelude::*;
 
 use crate::ui::assets::*;

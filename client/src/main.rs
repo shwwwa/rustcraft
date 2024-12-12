@@ -18,7 +18,6 @@ use bevy::{
 use clap::Parser;
 use constants::{TEXTURE_PATH_BASE, TEXTURE_PATH_CUSTOM};
 use input::{data::GameAction, keyboard::get_bindings};
-use menus::settings::{DisplayQuality, Volume};
 use menus::solo::SelectedWorld;
 use serde::{Deserialize, Serialize};
 use shared::GameFolderPaths;
@@ -136,9 +135,7 @@ fn main() {
 
     app.add_event::<LoadWorldEvent>();
     network::add_base_netcode(&mut app);
-    app.insert_resource(DisplayQuality::Medium)
-        .insert_resource(Volume(7))
-        .insert_resource(get_bindings(&game_folder_path.clone()))
+    app.insert_resource(get_bindings(&game_folder_path.clone()))
         .insert_resource(SelectedWorld::default())
         // Declare the game state, whose starting value is determined by the `Default` trait
         .insert_resource(ClientWorldMap { ..default() })

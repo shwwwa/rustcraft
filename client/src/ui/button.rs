@@ -2,7 +2,10 @@ use bevy::prelude::*;
 use bevy_simple_text_input::TextInputInactive;
 
 use super::{
-    assets::{load_button_background_image, load_dark_button_background_image},
+    assets::{
+        load_button_background_image, load_button_background_large_image,
+        load_dark_button_background_image, load_dark_button_background_large_image,
+    },
     style::*,
 };
 
@@ -21,8 +24,6 @@ pub enum MenuButtonAction {
     Solo,
     Multi,
     Settings,
-    SettingsDisplay,
-    SettingsSound,
     SettingsControls,
     BackToMainMenu,
     BackToSettings,
@@ -35,8 +36,6 @@ pub enum MenuState {
     Solo,
     Multi,
     Settings,
-    SettingsDisplay,
-    SettingsSound,
     SettingsControls,
     #[default]
     Disabled,
@@ -49,8 +48,10 @@ pub fn button_system(
             &mut UiImage,
             &mut BackgroundColor,
             Option<&SelectedOption>,
+            &Style,
+            &Node,
         ),
-        (Changed<Interaction>, With<Button>),
+        With<Button>,
     >,
     input_click_query: Query<
         (Entity, &Interaction),
@@ -59,11 +60,28 @@ pub fn button_system(
     mut text_input_query: Query<(Entity, &mut TextInputInactive)>,
     asset_server: Res<AssetServer>, // Needed to load images
 ) {
-    // Load button images
-    let normal_image = load_button_background_image(&asset_server);
-    let dark_image = load_dark_button_background_image(&asset_server);
+    for (interaction, mut ui_image, mut background_color, selected, style, node) in
+        &mut interaction_query
+    {
+        // Get button real size
+        let width = match style.width {
+            Val::Px(width) => width,
+            _ => node.size().x,
+        };
 
-    for (interaction, mut ui_image, mut background_color, selected) in &mut interaction_query {
+        // Charger les images appropriées en fonction de la largeur
+        let (normal_image, dark_image) = if width > 400.0 {
+            (
+                load_button_background_large_image(&asset_server),
+                load_dark_button_background_large_image(&asset_server),
+            )
+        } else {
+            (
+                load_button_background_image(&asset_server),
+                load_dark_button_background_image(&asset_server),
+            )
+        };
+
         match *interaction {
             Interaction::Pressed => {
                 *background_color = PRESSED_BUTTON.into();

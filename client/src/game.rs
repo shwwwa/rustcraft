@@ -39,13 +39,8 @@ use crate::network::{
     send_player_position_to_server, terminate_server_connection, upload_player_inputs_system,
     CurrentPlayerProfile, TargetServer, TargetServerState,
 };
-use crate::{DisplayQuality, GameState, Volume};
 
-fn print_settings(display_quality: Res<DisplayQuality>, volume: Res<Volume>) {
-    info!("Entering GameState::Game");
-    info!("Current Display Quality: {:?}", *display_quality);
-    info!("Current Volume: {:?}", *volume);
-}
+use crate::GameState;
 
 #[derive(Resource)]
 pub struct PreLoadingCompletion {
@@ -127,10 +122,7 @@ pub fn game_plugin(app: &mut App) {
             OnEnter(GameState::Game),
             (setup_hotbar, setup_inventory).chain(),
         )
-        .add_systems(
-            OnEnter(GameState::Game),
-            (print_settings, setup_chunk_ghost),
-        )
+        .add_systems(OnEnter(GameState::Game), setup_chunk_ghost)
         .add_systems(
             Update,
             (

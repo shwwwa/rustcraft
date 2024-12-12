@@ -16,9 +16,12 @@ use bevy::{
 };
 use shared::GameFolderPaths;
 
-use super::{MenuButtonAction, MenuState, ScrollingList};
+use crate::input::data::GameAction;
+use crate::menus::{MenuButtonAction, MenuState, ScrollingList};
 use crate::KeyMap;
-use crate::{input::data::GameAction, ui::style::NORMAL_BUTTON};
+
+use crate::ui::assets::*;
+use crate::ui::style::NORMAL_BUTTON;
 
 #[derive(Debug, Component, PartialEq, Eq)]
 pub struct ClearButton(GameAction, Entity);
@@ -38,7 +41,8 @@ pub fn controls_menu_setup(
     key_map: Res<KeyMap>,
     paths: Res<GameFolderPaths>,
 ) {
-    let font: Handle<Font> = assets.load("./fonts/RustCraftRegular-Bmg3.otf");
+    let background_image = load_background_image(&assets);
+    let font = load_font(&assets);
     let trash_icon = assets.load("./trash.png");
 
     commands
@@ -58,6 +62,7 @@ pub fn controls_menu_setup(
                 },
                 ..Default::default()
             },
+            UiImage::new(background_image),
         ))
         .with_children(|root| {
             let placeholder = root

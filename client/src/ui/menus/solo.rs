@@ -64,6 +64,7 @@ pub fn solo_menu_setup(
 ) {
     let background_image = load_background_image(&assets_server);
     let font = load_font(&assets_server);
+    let button_background_image = load_button_background_large_image(&assets_server);
 
     let txt_style = TextStyle {
         font: font.clone(),
@@ -83,7 +84,7 @@ pub fn solo_menu_setup(
         justify_content: JustifyContent::Center,
         align_items: AlignItems::Center,
         border: UiRect::all(Val::Px(2.)),
-        height: Val::Px(50.0),
+        height: Val::Px(40.0),
         ..Default::default()
     };
 
@@ -198,6 +199,7 @@ pub fn solo_menu_setup(
                                 style.grid_column = GridPlacement::span(2);
                                 style
                             },
+                            image: UiImage::new(button_background_image.clone()),
                             ..Default::default()
                         },
                         MultiplayerButtonAction::Add,
@@ -219,6 +221,7 @@ pub fn solo_menu_setup(
                                 style.grid_column = GridPlacement::span(2);
                                 style
                             },
+                            image: UiImage::new(button_background_image.clone()),
                             ..Default::default()
                         },
                         MenuButtonAction::BackToMainMenu,

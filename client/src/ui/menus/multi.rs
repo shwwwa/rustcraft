@@ -64,6 +64,7 @@ pub fn multiplayer_menu_setup(
 ) {
     let font = load_font(&asset_server);
     let background_image = load_background_image(&asset_server);
+    let button_background_image = load_button_background_large_image(&asset_server);
 
     let txt_style = text_style(font.clone(), 20.0, TEXT_COLOR);
     let txt_style_inactive = text_style(font.clone(), 20.0, Color::srgb(0.3, 0.3, 0.3));
@@ -74,7 +75,7 @@ pub fn multiplayer_menu_setup(
         justify_content: JustifyContent::Center,
         align_items: AlignItems::Center,
         border: UiRect::all(Val::Px(2.)),
-        height: Val::Px(50.0),
+        height: Val::Px(40.0),
         ..Default::default()
     };
 
@@ -208,6 +209,7 @@ pub fn multiplayer_menu_setup(
                             border_color: BorderColor(Color::BLACK),
                             background_color: BackgroundColor(BACKGROUND_COLOR),
                             style: btn_style.clone(),
+                            image: UiImage::new(button_background_image.clone()),
                             ..Default::default()
                         },
                         MultiplayerButtonAction::Add,
@@ -229,6 +231,7 @@ pub fn multiplayer_menu_setup(
                                 style.grid_column = GridPlacement::span(2);
                                 style
                             },
+                            image: UiImage::new(button_background_image.clone()),
                             ..Default::default()
                         },
                         MenuButtonAction::BackToMainMenu,

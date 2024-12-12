@@ -8,7 +8,10 @@ pub const FONT_PATH: &str = "./fonts/RustCraftRegular-Bmg3.otf";
 // pub const TRASH_ICON_PATH: &str = "./graphics/trash.png";
 pub const BACKGROUND_IMAGE_PATH: &str = "./graphics/background.png";
 pub const BUTTON_BACKGROUND_IMAGE_PATH: &str = "./graphics/button_background.png";
+pub const BUTTON_BACKGROUND_LARGE_IMAGE_PATH: &str = "./graphics/button_background_large.png";
 pub const DARK_BUTTON_BACKGROUND_IMAGE_PATH: &str = "./graphics/dark_button_background.png";
+pub const DARK_BUTTON_BACKGROUND_LARGE_IMAGE_PATH: &str =
+    "./graphics/dark_button_background_large.png";
 pub const TITLE_IMAGE_PATH: &str = "./graphics/title.png";
 
 // Function to load the font asset
@@ -33,8 +36,16 @@ pub fn load_button_background_image(asset_server: &Res<AssetServer>) -> Handle<I
     asset_server.load(BUTTON_BACKGROUND_IMAGE_PATH)
 }
 
+pub fn load_button_background_large_image(asset_server: &Res<AssetServer>) -> Handle<Image> {
+    asset_server.load(BUTTON_BACKGROUND_LARGE_IMAGE_PATH)
+}
+
 pub fn load_dark_button_background_image(asset_server: &Res<AssetServer>) -> Handle<Image> {
     asset_server.load(DARK_BUTTON_BACKGROUND_IMAGE_PATH)
+}
+
+pub fn load_dark_button_background_large_image(asset_server: &Res<AssetServer>) -> Handle<Image> {
+    asset_server.load(DARK_BUTTON_BACKGROUND_LARGE_IMAGE_PATH)
 }
 
 pub fn load_title_image(asset_server: &Res<AssetServer>) -> Handle<Image> {

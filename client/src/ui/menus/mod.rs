@@ -1,4 +1,3 @@
-pub mod controls;
 pub mod home;
 pub mod loading;
 pub mod multi;
@@ -13,11 +12,11 @@ pub use home::*;
 use bevy::input::mouse::{MouseScrollUnit, MouseWheel};
 
 use bevy::app::AppExit;
-use controls::{controls_menu_setup, controls_update_system};
 use multi::multiplayer_action;
+use settings::controls::{controls_menu_setup, controls_update_system};
 
 use crate::input::keyboard::save_keybindings;
-use crate::{DisplayQuality, GameState, MenuCamera, Volume};
+use crate::{GameState, MenuCamera};
 
 use super::button::*;
 
@@ -36,27 +35,10 @@ pub fn menu_plugin(app: &mut App) {
         // Systems to handle the settings menu screen
         .add_systems(OnEnter(MenuState::Settings), settings::settings_menu_setup)
         // Systems to handle the display settings screen
-        .add_systems(
-            OnEnter(MenuState::SettingsDisplay),
-            settings::display_settings_menu_setup,
-        )
-        .add_systems(
-            Update,
-            (settings::setting_button::<DisplayQuality>
-                .run_if(in_state(MenuState::SettingsDisplay)),),
-        )
         // Systems to handle the sound settings screen
-        .add_systems(
-            OnEnter(MenuState::SettingsSound),
-            settings::sound_settings_menu_setup,
-        )
         // save the keybings when lauching the game, and when exiting settings
         .add_systems(OnEnter(GameState::Menu), save_keybindings)
         .add_systems(OnExit(MenuState::SettingsControls), save_keybindings)
-        .add_systems(
-            Update,
-            settings::setting_button::<Volume>.run_if(in_state(MenuState::SettingsSound)),
-        )
         .add_systems(
             OnEnter(MenuState::Multi),
             (multi::multiplayer_menu_setup, multi::load_server_list).chain(),
@@ -104,12 +86,6 @@ fn menu_action(
                 }
                 MenuButtonAction::Solo => menu_state.set(MenuState::Solo),
                 MenuButtonAction::Settings => menu_state.set(MenuState::Settings),
-                MenuButtonAction::SettingsDisplay => {
-                    menu_state.set(MenuState::SettingsDisplay);
-                }
-                MenuButtonAction::SettingsSound => {
-                    menu_state.set(MenuState::SettingsSound);
-                }
                 MenuButtonAction::BackToMainMenu => menu_state.set(MenuState::Main),
                 MenuButtonAction::BackToSettings => {
                     menu_state.set(MenuState::Settings);
