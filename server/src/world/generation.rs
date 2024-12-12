@@ -269,7 +269,7 @@ pub fn generate_chunk(chunk_pos: IVec3, seed: u32) -> ServerChunk {
                     match biome_type {
                         BiomeType::Forest => {
                             // High probability for trees in Forest
-                            if tree_chance < 0.1 {
+                            if tree_chance < 0.06 {
                                 if !chunk.map.contains_key(&above_surface_pos) {
                                     generate_tree(
                                         &mut chunk,
@@ -284,7 +284,7 @@ pub fn generate_chunk(chunk_pos: IVec3, seed: u32) -> ServerChunk {
                         }
                         BiomeType::FlowerPlains | BiomeType::MediumMountain => {
                             // Medium probability for trees in Flower Plains and Medium Mountain
-                            if tree_chance < 0.05 {
+                            if tree_chance < 0.02 {
                                 if !chunk.map.contains_key(&above_surface_pos) {
                                     generate_tree(
                                         &mut chunk,
