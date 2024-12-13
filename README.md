@@ -118,8 +118,7 @@ sudo pacman -S base-devel mold clang vulkan-radeon vulkan-tools
 
 #### Ubuntu/Debian
 ```bash
-sudo apt update && sudo apt install -y \
-    build-essential mold clang mesa-vulkan-drivers vulkan-tools
+sudo apt install -y build-essential mold clang mesa-vulkan-drivers vulkan-tools pkg-config libasound2-dev libudev-dev
 ```
 - For NVIDIA GPUs, also install:
     ```shell
