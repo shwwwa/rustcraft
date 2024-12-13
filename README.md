@@ -2,7 +2,11 @@
 
 Minecraft game clone written in Rust, using the Bevy game engine.
 
-![image](./docs/preview.png)
+<br>
+
+![image](./docs/preview1.png)
+
+![image](./docs/preview2.png)
 
 <br>
 
@@ -17,14 +21,18 @@ Minecraft game clone written in Rust, using the Bevy game engine.
 - [Contributing](#contributing)
     - [Guidelines](#guidelines)
 
+<br>
+
 # Features
-- Procedurally generated worlds with biomes (Plains, Forest, Mountains, Desert, Ice Plain), trees and flowers.
+- Procedurally generated worlds with biomes (Plains, Forest, Mountains, Desert, Ice Plain, Flower plains), trees, cactus, tall grass and flowers.
 - Multiplayer functionality.
-- Dynamic day/night cycle
+- Day/night cycle
 - Block breaking and placing mehanics.
 - Inventory system with a functional hotbar.
 - World saving and loading.
 - Customizable keybindings and dynamic render distance adjustment.
+
+<br>
 
 # Download
 
@@ -32,42 +40,40 @@ You can download the game for **Windows** and **Linux** from the [Releases page]
 
 Once downloaded, extract the archive for your operating system. The executable will be located in the `/bin` folder of the extracted directory.
 
+<br>
+
 # Controls
 
-```
-Movement
-- Jump:             Space
-- Strafe Left:      A / Arrow Left
-- Strafe Right:     D / Arrow Right
-- Walk Backward:    S / Arrow Down
-- Walk Forward:     W / Arrow Up
-- Toggle Fly Mode:  F
-- Fly Up:           Space
-- Fly Down:         Left Shift
+| **Category**     | **Action**             | **Key(s)**                  |
+|-------------------|------------------------|-----------------------------|
+| **Movement**      | Jump                  | Space                       |
+|                   | Strafe Left           | A / Arrow Left              |
+|                   | Strafe Right          | D / Arrow Right             |
+|                   | Walk Backward         | S / Arrow Down              |
+|                   | Walk Forward          | W / Arrow Up                |
+|                   | Toggle Fly Mode       | F                           |
+|                   | Fly Up                | Space                       |
+|                   | Fly Down              | Left Shift                  |
+|                   |                        |                             |
+| **Gameplay**      | Destroy Block         | Left Mouse Button           |
+|                   | Place Block           | Right Mouse Button          |
+|                   |                        |                             |
+| **Inventory**     | Open/Close Inventory  | E                           |
+|                   | Pick up stack         | Left Click                  |
+|                   | Pick up half of stack | Right Click (with empty mouse) |
+|                   | Deposit 1 item        | Right Click (over valid stack) |
+|                   | Deposit MAX items     | Left Click (over valid stack) |
+|                   | Exchange stacks       | Left Click (over a different stack or full valid stack) |
+|                   |                        |                             |
+| **Miscellaneous** | Toggle FPS Display    | F3                          |
+|                   | Toggle Perspective    | F5                          |
+|                   | Toggle Chunk Debug    | F4                          |
+|                   | Toggle Block Debug    | F6                          |
+|                   | Decrease Render Distance | O                        |
+|                   | Increase Render Distance | P                        |
+|                   | Exit Game             | Escape                      |
 
-Gameplay
-- Destroy Block:  Left Mouse Button
-- Place Block:    Right Mouse Button
-
-Inventory
-- Open/Close Inventory:   E
-- Pick up stack:          Left Click
-- Pick up half of stack:  Right Click (with empty mouse)
-- Deposit 1 item:         Right Click (over valid stack)
-- Deposit MAX items:      Left Click (over valid stack)
-- Exchange stacks:        Left Click (over a different stack or full valid stack)
-
-> A "valid stack" refers to a stack in the inventory that is either empty or contains the same items as the mouse cursor.
-
-Miscellaneous
-- Toggle FPS Display:        F3
-- Toggle Perspective:        F5
-- Toggle Chunk Debug:        F4
-- Toggle Block Debug:        F6
-- Decrease Render Distance:  O
-- Increase Render Distance:  P
-- Exit Game:                 Escape
-```
+<br>
 
 # How to Build
 
@@ -95,6 +101,13 @@ To build and run this project, you need the following tools and dependencies ins
 
 Install the required dependencies based on your operating system:
 
+#### Windows
+- **Git Bash** is required to ensure the commands in the `Justfile` and scripts run correctly. Download and install [Git Bash](https://git-scm.com/).
+- After installation, make sure Git Bash is added to your system's `PATH`. You can verify it by running:
+  ```bash
+  bash --version
+  ```
+
 #### Arch Linux
 ```bash
 sudo pacman -S base-devel mold clang vulkan-radeon vulkan-tools
@@ -113,18 +126,11 @@ sudo apt update && sudo apt install -y \
     sudo apt install -y nvidia-driver nvidia-vulkan-icd
     ```
 
-#### Windows
-- **Git Bash** is required to ensure the commands in the `Justfile` and scripts run correctly. Download and install [Git Bash](https://git-scm.com/).
-- After installation, make sure Git Bash is added to your system's `PATH`. You can verify it by running:
-  ```bash
-  bash --version
-  ```
-
 ## Running the Project
 
 To compile and run the game locally, use the following commands:
 
-Note: the first compilation will be slow depending on your hardware, next compilations will be incremental and thus faster.
+> Note: the first compilation will be slow depending on your hardware, next compilations will be incremental and thus faster.
 
 ```sh
 # Clone the repository
@@ -136,19 +142,23 @@ cd rustcraft
 
 Debug mode:
 ```sh
-./run-server.sh  # this will compile the project and run the server
 ./run1.sh        # this will compile the project and run the client 
+
+./run-server.sh  # (optional) do this only to test multiplayer features
 ```
 
 Release mode:
 ```sh
-# Build the project in debug or release mode
+# Build the project in release mode
 just generate-release-folder
 
 # Run the executable
 ./release/bin/rustcraft         # run the client
-./release/bin/rustcraft-server  # run the server
+
+./release/bin/rustcraft-server  # (optional) do this only to test multiplayer features
 ```
+
+<br>
 
 # Contributing
 
@@ -161,37 +171,26 @@ Run `cargo fmt` before committing.
 
 ### Commit messages:
 
-We follow the [Conventional Commit specification](https://www.conventionalcommits.org/en/v1.0.0/).
-```
-<type>[optional scope]: <description>
+- We follow the [Conventional Commit specification](https://www.conventionalcommits.org/en/v1.0.0/). Our commit types are inspired by the [Karma specification](http://karma-runner.github.io/6.4/dev/git-commit-msg.html)
+  ```
+  <type>[optional scope]: <description>
 
-[optional body]
+  [optional body]
 
-[optional footer(s)]
-```
+  [optional footer(s)]
+  ```
 
-Our commit types are inspired by the [Karma specification](http://karma-runner.github.io/6.4/dev/git-commit-msg.html)
+  Allowed <type> values: 
+  - **feat** for a new feature for the user, not a new feature for build script. Such commit will trigger a release bumping a MINOR version.
+  - **fix** for a bug fix for the user, not a fix to a build script. Such commit will trigger a release bumping a PATCH version.
+  - **perf** for performance improvements. Such commit will trigger a release bumping a PATCH version.
+  - **docs** for changes to the documentation.
+  - **style** for formatting changes, missing semicolons, etc.
+  - **refactor** for refactoring production code, e.g. renaming a variable.
+  - **test** for adding missing tests, refactoring tests; no production code change.
+  - **build** for updating build configuration, development tools or other changes irrelevant to the user.
 
-Allowed <type> values: 
-- **feat** for a new feature for the user, not a new feature for build script. Such commit will trigger a release bumping a MINOR version.
-- **fix** for a bug fix for the user, not a fix to a build script. Such commit will trigger a release bumping a PATCH version.
-- **perf** for performance improvements. Such commit will trigger a release bumping a PATCH version.
-- **docs** for changes to the documentation.
-- **style** for formatting changes, missing semicolons, etc.
-- **refactor** for refactoring production code, e.g. renaming a variable.
-- **test** for adding missing tests, refactoring tests; no production code change.
-- **build** for updating build configuration, development tools or other changes irrelevant to the user.
-
-Write commit messages in the present tense (e.g., "Add feature X" instead of "Added feature X").
-
-If a commit is co-authored by multiple people, do not hesitate to add a `Co-authored-by` field. See [GitHub documentation](https://docs.github.com/en/pull-requests/committing-changes-to-your-project/creating-and-editing-commits/creating-a-commit-with-multiple-authors). For example: 
-```sh
-$ git commit -m "Refactor usability tests.
->
->
-Co-authored-by: NAME <NAME@EXAMPLE.COM>
-Co-authored-by: ANOTHER-NAME <ANOTHER-NAME@EXAMPLE.COM>"
-```
+- Write commit messages in the present tense (e.g., "Add feature X" instead of "Added feature X").
 
 ### Branches
 - Use the naming convention `<type>/<name>` for branches introducing new features. Only use lowercase letters, numbers, and dashes.
