@@ -5,7 +5,7 @@ use crate::TexturePath;
 use bevy::prelude::*;
 use bevy::render::render_resource::{Extent3d, Face, TextureDimension, TextureFormat};
 use shared::world::{get_game_folder, BlockId, GameElementId, ItemId};
-use shared::GameFolderPaths;
+use shared::{GameFolderPaths, SpecialFlag};
 use std::collections::HashMap;
 use std::fs;
 use std::marker::PhantomData;
@@ -52,6 +52,7 @@ pub fn setup_materials(
     mut item_atlas_handles: ResMut<AtlasHandles<ItemId>>,
     texture_path: Res<TexturePath>,
     paths: Res<GameFolderPaths>,
+    special_flag: Res<SpecialFlag>,
 ) {
     let sun_material = materials.add(StandardMaterial {
         base_color: Color::srgb(1., 0.95, 0.1),
@@ -116,14 +117,29 @@ pub fn setup_materials(
 
     // Load images of all blocks defined in the enum
 
-    let blocks_path = get_game_folder(Some(&paths))
-        .join(paths.assets_folder_path.clone())
-        .join(&texture_path.path)
-        .join("blocks/");
-    let items_path = get_game_folder(Some(&paths))
-        .join(paths.assets_folder_path.clone())
-        .join(&texture_path.path)
-        .join("items/");
+    let (blocks_path, items_path) = if !special_flag.special_flag {
+        (
+            get_game_folder(Some(&paths))
+                .join("data/")
+                .join(&texture_path.path)
+                .join("blocks/"),
+            get_game_folder(Some(&paths))
+                .join("data/")
+                .join(&texture_path.path)
+                .join("items/"),
+        )
+    } else {
+        (
+            get_game_folder(Some(&paths))
+                .join(paths.assets_folder_path.clone())
+                .join(&texture_path.path)
+                .join("blocks/"),
+            get_game_folder(Some(&paths))
+                .join(paths.assets_folder_path.clone())
+                .join(&texture_path.path)
+                .join("items/"),
+        )
+    };
 
     if let Ok(dir) = fs::read_dir(blocks_path.clone()) {
         block_atlas_handles.handles = dir

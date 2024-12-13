@@ -10,4 +10,5 @@ cargo run \
 --bin client \
 -- \
 --game-folder-path $PWD/appdata/client-2 \
---assets-folder-path $PWD/data
+--assets-folder-path $PWD/data \
+--special-flag
