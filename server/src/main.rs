@@ -13,7 +13,7 @@ mod world;
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
 struct Args {
-    #[arg(short, long, default_value_t = 0)]
+    #[arg(short, long, default_value_t = 8000)]
     port: u16,
 
     #[arg(short, long, default_value = "default")]
