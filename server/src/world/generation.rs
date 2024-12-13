@@ -256,7 +256,7 @@ pub fn generate_chunk(chunk_pos: IVec3, seed: u32) -> ServerChunk {
                         && biome_type != BiomeType::IcePlain
                     {
                         let tall_grass_chance = rand::random::<f32>();
-                        if tall_grass_chance < 0.15 {
+                        if tall_grass_chance < 0.10 {
                             chunk.map.insert(
                                 block_pos.with_y(block_pos.y + 1),
                                 BlockData::new(BlockId::TallGrass, false, BlockDirection::Front),
