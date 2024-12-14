@@ -13,7 +13,9 @@ Minecraft game clone written in Rust, using the Bevy game engine.
 # Table of contents
 
 - [Features](#features)
-- [Download](#download)
+- [Installation](#installation)
+    - [Package Managers](#package-managers)
+    - [Manual](#manual)
 - [Controls](#controls)
 - [How to Build](#how-to-build)
     - [Prerequisites](#prerequisites)
@@ -34,7 +36,23 @@ Minecraft game clone written in Rust, using the Bevy game engine.
 
 <br>
 
-# Download
+# Installation
+
+## Package Managers
+
+### Arch Linux
+
+There are 2 [AUR](https://aur.archlinux.org) packages available for rustcraft:
+
+- [rustcraft](https://aur.archlinux.org/packages/rustcraft): The latest release built from source
+- [rustcraft-bin](https://aur.archlinux.org/packages/rustcraft-bin): The latest release pre-built
+
+You can install them using your preferred [AUR helper](https://wiki.archlinux.org/title/AUR_helpers), e.g. `paru`:
+```bash
+paru -S rustcraft
+```
+
+## Manual
 
 You can download the game for **Windows** and **Linux** from the [Releases page](https://github.com/c2i-junia/rustcraft/releases) of the GitHub repository.
 
