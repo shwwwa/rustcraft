@@ -38,6 +38,12 @@ Minecraft game clone written in Rust, using the Bevy game engine.
 
 # Installation
 
+## Manual
+
+You can download the game for **Windows** and **Linux** from the [Releases page](https://github.com/c2i-junia/rustcraft/releases) of the GitHub repository.
+
+Once downloaded, extract the archive for your operating system. The executable will be located in the `/bin` folder of the extracted directory.
+
 ## Package Managers
 
 ### Arch Linux
@@ -51,12 +57,6 @@ You can install them using your preferred [AUR helper](https://wiki.archlinux.or
 ```bash
 paru -S rustcraft
 ```
-
-## Manual
-
-You can download the game for **Windows** and **Linux** from the [Releases page](https://github.com/c2i-junia/rustcraft/releases) of the GitHub repository.
-
-Once downloaded, extract the archive for your operating system. The executable will be located in the `/bin` folder of the extracted directory.
 
 <br>
 
