@@ -29,7 +29,7 @@ Minecraft game clone written in Rust, using the Bevy game engine.
 - Procedurally generated worlds with biomes (Plains, Forest, Mountains, Desert, Ice Plain, Flower plains), trees, cactus, tall grass and flowers.
 - Multiplayer functionality.
 - Day/night cycle
-- Block breaking and placing mehanics.
+- Block breaking and placing mechanics.
 - Inventory system with a functional hotbar.
 - World saving and loading.
 - Customizable keybindings and dynamic render distance adjustment.
