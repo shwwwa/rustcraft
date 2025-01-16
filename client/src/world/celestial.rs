@@ -24,6 +24,12 @@ pub struct SunLight;
 #[derive(Component)]
 pub struct MoonLight;
 
+#[derive(Debug, Default)]
+pub struct DayCycle {
+    local_time: f32,
+    last_sync: f32,
+}
+
 pub fn setup_main_lighting(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -34,8 +40,8 @@ pub fn setup_main_lighting(
     let celestial_root = commands
         .spawn((
             CelestialRoot,
-            SpatialBundle::default(),
             StateScoped(GameState::Game),
+            Transform::default(),
         ))
         .id();
 
@@ -44,31 +50,31 @@ pub fn setup_main_lighting(
     let sun_light = commands
         .spawn((
             SunLight,
-            DirectionalLightBundle {
-                directional_light: DirectionalLight {
+            (
+                DirectionalLight {
                     illuminance: 5000.,
                     shadows_enabled: true,
-                    ..Default::default()
+                    ..default()
                 },
-                transform: light_transform,
-                ..Default::default()
-            },
+                light_transform,
+            ),
         ))
         .with_children(|parent| {
             parent.spawn((
-                PbrBundle {
-                    mesh: meshes.add(Rectangle::new(CELESTIAL_SIZE, CELESTIAL_SIZE)),
-                    material: material_resource
-                        .global_materials
-                        .get(&GlobalMaterial::Sun)
-                        .expect("Sun material not found !")
-                        .clone(),
-                    transform: Transform {
+                (
+                    Mesh3d(meshes.add(Rectangle::new(CELESTIAL_SIZE, CELESTIAL_SIZE))),
+                    MeshMaterial3d(
+                        material_resource
+                            .global_materials
+                            .get(&GlobalMaterial::Sun)
+                            .expect("Sun material not found !")
+                            .clone(),
+                    ),
+                    Transform {
                         translation: Vec3::new(0., 0., CELESTIAL_DISTANCE),
-                        ..Default::default()
+                        ..default()
                     },
-                    ..Default::default()
-                },
+                ),
                 NotShadowCaster,
                 NotShadowReceiver,
             ));
@@ -79,33 +85,32 @@ pub fn setup_main_lighting(
     let moon_light = commands
         .spawn((
             MoonLight,
-            DirectionalLightBundle {
-                directional_light: DirectionalLight {
+            (
+                DirectionalLight {
                     illuminance: 500.,
                     color: Color::Srgba(Srgba::hex("c9d2de").unwrap()),
                     shadows_enabled: true,
-
-                    ..Default::default()
+                    ..default()
                 },
-                transform: light_transform,
-                ..Default::default()
-            },
+                light_transform,
+            ),
         ))
         .with_children(|parent| {
             parent.spawn((
-                PbrBundle {
-                    mesh: meshes.add(Rectangle::new(CELESTIAL_SIZE, CELESTIAL_SIZE)),
-                    material: material_resource
-                        .global_materials
-                        .get(&GlobalMaterial::Moon)
-                        .expect("Moon material not found !")
-                        .clone(),
-                    transform: Transform {
+                (
+                    Mesh3d(meshes.add(Rectangle::new(CELESTIAL_SIZE, CELESTIAL_SIZE))),
+                    MeshMaterial3d(
+                        material_resource
+                            .global_materials
+                            .get(&GlobalMaterial::Moon)
+                            .expect("Moon material not found !")
+                            .clone(),
+                    ),
+                    Transform {
                         translation: Vec3::new(0., 0., CELESTIAL_DISTANCE),
                         ..Default::default()
                     },
-                    ..Default::default()
-                },
+                ),
                 NotShadowCaster,
                 NotShadowReceiver,
             ));
@@ -114,7 +119,7 @@ pub fn setup_main_lighting(
 
     commands
         .entity(celestial_root)
-        .push_children(&[sun_light, moon_light]);
+        .add_children(&[sun_light, moon_light]);
 
     commands.entity(player.single()).add_child(celestial_root);
 }
@@ -123,34 +128,23 @@ pub fn update_celestial_bodies(
     mut query: Query<&mut Transform, With<CelestialRoot>>,
     time: Res<Time>,
     client_time: Res<ClientTime>,
+    mut times: Local<DayCycle>,
 ) {
-    static mut LOCAL_TIME: f32 = 0.0;
-    static mut LAST_SYNC: f32 = 0.0;
+    // Update local time with delta_secs
+    times.local_time += time.delta_secs();
 
-    unsafe {
-        // Unsafe is used here because we are working with static mutable variables (`LOCAL_TIME` and `LAST_SYNC`).
-        // Static mutable variables are not inherently thread-safe, and Rust enforces safety guarantees
-        // to avoid potential data races. Since Bevy's systems run sequentially by default and this system
-        // does not share these static variables across multiple threads, we are assuming it's safe to use `unsafe` here.
-        // However, this approach should be avoided if this system might ever run in parallel or be accessed
-        // from multiple threads simultaneously.
+    // Synchronize with the server time every second
+    if times.local_time - times.last_sync >= 1.0 {
+        times.local_time = client_time.0 as f32; // Reset local time based on the server
+        times.last_sync = times.local_time;
+    }
 
-        // Update local time with delta_seconds
-        LOCAL_TIME += time.delta_seconds();
+    // Calculate the angle for the rotation (normalization between 0 and 1)
+    let normalized_time = (times.local_time % DAY_DURATION) / DAY_DURATION;
+    let angle = normalized_time * 2.0 * PI;
 
-        // Synchronize with the server time every second
-        if LOCAL_TIME - LAST_SYNC >= 1.0 {
-            LOCAL_TIME = client_time.0 as f32; // Reset local time based on the server
-            LAST_SYNC = LOCAL_TIME;
-        }
-
-        // Calculate the angle for the rotation (normalization between 0 and 1)
-        let normalized_time = (LOCAL_TIME % DAY_DURATION) / DAY_DURATION;
-        let angle = normalized_time * 2.0 * PI;
-
-        // Apply the rotation to celestial bodies
-        for mut tr in &mut query {
-            tr.rotation = Quat::from_rotation_x(angle);
-        }
+    // Apply the rotation to celestial bodies
+    for mut tr in query.iter_mut() {
+        tr.rotation = Quat::from_rotation_x(angle);
     }
 }

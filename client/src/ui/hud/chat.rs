@@ -8,6 +8,8 @@ use bevy_renet::renet::RenetClient;
 use bevy_simple_text_input::*;
 use shared::GameFolderPaths;
 
+use super::UIMode;
+
 #[derive(Component)]
 pub struct ChatRoot;
 
@@ -41,10 +43,8 @@ pub fn setup_chat(
             StateScoped(crate::GameState::Game),
             ChatRoot,
             UiDialog,
-            NodeBundle {
-                background_color: BackgroundColor(CHAT_COLOR),
-                visibility: Visibility::Hidden,
-                style: Style {
+            (
+                Node {
                     display: Display::Flex,
                     position_type: PositionType::Absolute,
                     bottom: Val::Px(0.),
@@ -57,58 +57,55 @@ pub fn setup_chat(
                         y: OverflowAxis::Hidden,
                     },
                     flex_direction: FlexDirection::Column,
-                    ..Default::default()
+                    ..default()
                 },
-                ..Default::default()
-            },
+                BackgroundColor(CHAT_COLOR),
+                Visibility::Hidden,
+            ),
         ))
         .with_children(|root| {
             root.spawn((
                 ChatDisplay,
-                NodeBundle {
-                    style: Style {
-                        display: Display::Flex,
-                        flex_direction: FlexDirection::Column,
-                        justify_content: JustifyContent::End,
-                        column_gap: Val::Px(0.),
-                        overflow: Overflow {
-                            x: OverflowAxis::Visible,
-                            y: OverflowAxis::Hidden,
-                        },
-                        width: Val::Percent(100.),
-                        ..Default::default()
+                (Node {
+                    display: Display::Flex,
+                    flex_direction: FlexDirection::Column,
+                    justify_content: JustifyContent::End,
+                    column_gap: Val::Px(0.),
+                    overflow: Overflow {
+                        x: OverflowAxis::Visible,
+                        y: OverflowAxis::Hidden,
                     },
-                    ..Default::default()
-                },
+                    width: Val::Percent(100.),
+                    ..default()
+                },),
             ))
             .with_children(|d| {
                 // DO NOT REMOVE !!!
                 // Function send_chat has a bit of a meltdown if the ChatDisplay has no children (cuz of the Query)
-                d.spawn(NodeBundle::default());
+                d.spawn((Node::default(),));
             });
 
             root.spawn((
                 ChatInput,
-                NodeBundle {
-                    style: Style {
-                        width: Val::Percent(100.),
-                        ..Default::default()
-                    },
-                    ..Default::default()
-                },
-                bevy_simple_text_input::TextInputBundle {
-                    placeholder: TextInputPlaceholder {
+                (Node {
+                    width: Val::Percent(100.),
+                    ..default()
+                },),
+                (
+                    TextInput,
+                    TextInputValue("".into()),
+                    TextInputPlaceholder {
                         value: "Send a message...".to_string(),
-                        ..Default::default()
+                        ..default()
                     },
-                    text_style: TextInputTextStyle(TextStyle {
+                    TextInputTextFont(TextFont {
                         font: asset_server.load("./fonts/RustCraftRegular-Bmg3.otf"),
                         font_size: 17.,
-                        color: Color::WHITE,
+                        ..default()
                     }),
-                    inactive: TextInputInactive(true),
-                    ..Default::default()
-                },
+                    TextInputTextColor(TextColor(Color::WHITE)),
+                    TextInputInactive(true),
+                ),
             ));
         });
 }
@@ -120,6 +117,7 @@ pub fn render_chat(
         ResMut<RenetClient>,
         Res<ButtonInput<KeyCode>>,
         Res<KeyMap>,
+        Res<UIMode>,
     ),
     queries: (
         Query<(Entity, &mut TextInputInactive, &mut TextInputValue), With<ChatInput>>,
@@ -129,7 +127,6 @@ pub fn render_chat(
             (
                 Entity,
                 &mut BackgroundColor,
-                &mut Text,
                 &mut Visibility,
                 &MessageAnimator,
             ),
@@ -141,10 +138,10 @@ pub fn render_chat(
     mut commands: Commands,
     _paths: Res<GameFolderPaths>,
 ) {
-    let (cached_conv, asset_server, mut client, keyboard_input, key_map) = resources;
+    let (cached_conv, asset_server, mut client, keyboard_input, key_map, ui_mode) = resources;
     let (mut text_query, mut visibility_query, parent_query, mut animation_query) = queries;
-
     let (entity_check, mut inactive, mut value) = text_query.single_mut();
+
     let mut visibility = visibility_query.single_mut();
     let (parent, children) = parent_query.single();
 
@@ -152,7 +149,8 @@ pub fn render_chat(
         crate::input::data::GameAction::OpenChat,
         &keyboard_input,
         &key_map,
-    ) {
+    ) && *ui_mode == UIMode::Closed
+    {
         inactive.0 = false;
         *visibility = Visibility::Visible;
     }
@@ -173,21 +171,21 @@ pub fn render_chat(
         .duration_since(std::time::UNIX_EPOCH)
         .unwrap()
         .as_millis() as u64;
-    for (entity, mut bg, mut text, mut vis, animator) in animation_query.iter_mut() {
-        let diff = current_ts - animator.created_ts;
 
+    for (entity, mut bg, mut vis, animator) in animation_query.iter_mut() {
+        let diff = current_ts - animator.created_ts;
         // Additionnally, if chat is shown, cancel animation
         if diff > ANIMATION_BEGIN_FADE + ANIMATION_HIDE || *visibility == Visibility::Visible {
             // Remove animator to reduce load, reset style, and hide element
             commands.entity(entity).remove::<MessageAnimator>();
             *vis = Visibility::Inherited;
             *bg = BackgroundColor(Color::BLACK.with_alpha(0.));
-            text.sections[0].style.color = Color::WHITE;
+            // text.sections[0].style.color = Color::WHITE;
         } else if diff > ANIMATION_BEGIN_FADE {
             // Animate linear fade
             let alpha = 1. - ((diff - ANIMATION_BEGIN_FADE) as f32 / ANIMATION_HIDE as f32);
             *bg = BackgroundColor(CHAT_COLOR.with_alpha(0.6 * alpha));
-            text.sections[0].style.color = Color::WHITE.with_alpha(alpha);
+            // text.sections[0].style.color = Color::WHITE.with_alpha(alpha);
         }
     }
 
@@ -197,9 +195,7 @@ pub fn render_chat(
             if message.date <= *last_render_ts {
                 continue;
             }
-
             *last_render_ts = message.date;
-
             let msg = commands
                 .spawn((
                     MessageAnimator {
@@ -208,26 +204,21 @@ pub fn render_chat(
                             .unwrap()
                             .as_millis() as u64,
                     },
-                    TextBundle {
-                        text: Text::from_section(
-                            format!("<{}> : {}", message.author_name, message.content),
-                            TextStyle {
-                                font: asset_server.load("./fonts/RustCraftRegular-Bmg3.otf"),
-                                font_size: 17.,
-                                color: Color::WHITE,
-                            }
-                            .clone(),
-                        ),
-                        visibility: Visibility::Visible,
-                        background_color: BackgroundColor(CHAT_COLOR),
-                        ..Default::default()
-                    },
+                    (
+                        Text::new(format!("<{}> : {}", message.author_name, message.content)),
+                        TextFont {
+                            font: asset_server.load("./fonts/RustCraftRegular-Bmg3.otf"),
+                            font_size: 17.,
+                            ..default()
+                        },
+                        TextColor(Color::WHITE),
+                        Visibility::Visible,
+                        BackgroundColor(CHAT_COLOR),
+                    ),
                 ))
                 .id();
-
-            commands.entity(parent).push_children(&[msg]);
+            commands.entity(parent).add_children(&[msg]);
         }
-
         // Prevents too much messages from building up on screen
         if children.len() > CHAT_MAX_MESSAGES {
             for i in children.len()..CHAT_MAX_MESSAGES {

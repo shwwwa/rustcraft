@@ -11,7 +11,7 @@ use shared::world::{to_global_pos, BlockDirection, BlockId, BlockTransparency};
 
 use super::voxel::{Face, FaceDirection, VoxelShape};
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub struct UvCoords {
     pub u0: f32,
     pub u1: f32,
@@ -29,7 +29,7 @@ pub(crate) fn generate_chunk_mesh(
     world_map: &ClientWorldMap,
     chunk: &ClientChunk,
     chunk_pos: &IVec3,
-    block_uvs: &HashMap<String, UvCoords>,
+    uv_map: &HashMap<String, UvCoords>,
 ) -> Mesh {
     let start = Instant::now();
 
@@ -64,10 +64,10 @@ pub(crate) fn generate_chunk_mesh(
         for face in voxel.faces.iter() {
             let uv_coords: &UvCoords;
 
-            if let Some(uvs) = block_uvs.get(&face.texture) {
+            if let Some(uvs) = uv_map.get(&face.texture) {
                 uv_coords = uvs;
             } else {
-                uv_coords = block_uvs.get("_Default").unwrap();
+                uv_coords = uv_map.get("_Default").unwrap();
             }
 
             if should_render_face(world_map, global_block_pos, &face.direction, &visibility) {
@@ -187,9 +187,11 @@ fn render_face(
     local_colors.extend(face.colors.iter());
 
     local_uvs.extend(face.uvs.iter().map(|uv| {
+        // !!! DO NOT REMOVE THE FLOAT OFFSET !!!
+        // It removes seams between blocks in chunk meshes
         [
-            (uv[0] + uv_coords.u0).min(uv_coords.u1),
-            (uv[1] + uv_coords.v0).min(uv_coords.v1),
+            (uv[0] + uv_coords.u0 + 0.001).min(uv_coords.u1 - 0.001),
+            (uv[1] + uv_coords.v0 + 0.001).min(uv_coords.v1 - 0.001),
         ]
     }));
 }

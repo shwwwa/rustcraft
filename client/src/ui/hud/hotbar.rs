@@ -1,7 +1,7 @@
 use bevy::{prelude::*, ui::FocusPolicy};
 
 use crate::{
-    constants::{HOTBAR_BORDER, HOTBAR_CELL_SIZE, HOTBAR_PADDING, MAX_HOTBAR_SLOTS, TEXTURE_SIZE},
+    constants::{HOTBAR_BORDER, HOTBAR_CELL_SIZE, HOTBAR_PADDING, MAX_HOTBAR_SLOTS},
     ui::hud::InventoryCell,
     world::MaterialResource,
     GameState,
@@ -12,31 +12,15 @@ pub struct Hotbar {
     pub selected: u32,
 }
 
-pub fn setup_hotbar(
-    mut commands: Commands,
-    mut layouts: ResMut<Assets<TextureAtlasLayout>>,
-    materials_resource: Res<MaterialResource>,
-) {
-    let img = materials_resource.items.texture.clone().unwrap();
-
-    let atlas_element = TextureAtlas {
-        layout: layouts.add(TextureAtlasLayout::from_grid(
-            UVec2::splat(TEXTURE_SIZE),
-            materials_resource.items.uvs.len() as u32,
-            1,
-            None,
-            None,
-        )),
-        index: 0,
-    };
+pub fn setup_hotbar(mut commands: Commands, materials_resource: Res<MaterialResource>) {
+    let atlas = materials_resource.items.as_ref().unwrap();
 
     commands
         .spawn((
             Hotbar { selected: 0 },
             StateScoped(GameState::Game),
-            NodeBundle {
-                background_color: BackgroundColor(Color::srgba(0.3, 0.3, 0.3, 0.3)),
-                style: Style {
+            (
+                Node {
                     display: Display::Flex,
                     flex_direction: FlexDirection::Row,
                     position_type: PositionType::Absolute,
@@ -45,64 +29,65 @@ pub fn setup_hotbar(
                     padding: UiRect::ZERO,
                     border: UiRect::ZERO,
                     margin: UiRect::all(Val::Auto),
-                    ..Default::default()
+                    ..default()
                 },
-                z_index: ZIndex::Global(1),
-                ..Default::default()
-            },
+                BackgroundColor(Color::srgba(0.3, 0.3, 0.3, 0.3)),
+                GlobalZIndex(1),
+            ),
         ))
         .with_children(|bar| {
             for i in 0..MAX_HOTBAR_SLOTS {
                 bar.spawn((
                     InventoryCell { id: i },
-                    ButtonBundle {
-                        border_color: BorderColor(Color::srgb(0.3, 0.3, 0.3)),
-                        focus_policy: FocusPolicy::Block,
-                        style: Style {
+                    (
+                        Button,
+                        BorderColor(Color::srgb(0.3, 0.3, 0.3)),
+                        FocusPolicy::Block,
+                        Node {
                             width: Val::Px(HOTBAR_CELL_SIZE),
                             height: Val::Px(HOTBAR_CELL_SIZE),
                             margin: UiRect::ZERO,
                             position_type: PositionType::Relative,
                             padding: UiRect::all(Val::Px(HOTBAR_PADDING)),
                             border: UiRect::all(Val::Px(HOTBAR_BORDER)),
-                            ..Default::default()
+                            ..default()
                         },
-                        ..Default::default()
-                    },
+                    ),
                 ))
                 .with_children(|btn| {
-                    btn.spawn(TextBundle {
-                        text: Text::from_section(
-                            "Test",
-                            TextStyle {
-                                font_size: 15.,
-                                ..Default::default()
-                            },
-                        ),
-                        style: Style {
-                            position_type: PositionType::Absolute,
-                            ..Default::default()
-                        },
-                        ..Default::default()
-                    });
                     btn.spawn((
-                        ImageBundle {
-                            z_index: ZIndex::Local(-1),
-                            style: Style {
-                                width: Val::Px(
-                                    HOTBAR_CELL_SIZE - 2. * (HOTBAR_PADDING + HOTBAR_BORDER),
-                                ),
-                                position_type: PositionType::Relative,
-                                ..Default::default()
-                            },
-                            image: UiImage {
-                                texture: img.clone_weak(),
-                                ..default()
-                            },
+                        Text::new("Test"),
+                        TextColor(Color::WHITE),
+                        TextFont::from_font_size(15.0),
+                        Node {
+                            position_type: PositionType::Absolute,
+                            ..default()
+                        },
+                        ZIndex(1),
+                    ));
+                    btn.spawn(((
+                        Node {
+                            width: Val::Px(
+                                HOTBAR_CELL_SIZE - 2. * (HOTBAR_PADDING + HOTBAR_BORDER),
+                            ),
+                            position_type: PositionType::Relative,
                             ..Default::default()
                         },
-                        atlas_element.clone(),
-                    ));
+                        ImageNode::from_atlas_image(
+                            atlas.texture.clone_weak(),
+                            atlas
+                                .sources
+                                .handle(
+                                    atlas.layout.clone_weak(),
+                                    if let Some(handle) = atlas.handles.get("Dirt").as_ref() {
+                                        handle.id()
+                                    } else {
+                                        AssetId::default()
+                                    },
+                                )
+                                .unwrap_or_default(),
+                        ),
+                    ),));
                 });
             }
         });

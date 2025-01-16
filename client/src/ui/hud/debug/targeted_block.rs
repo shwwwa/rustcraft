@@ -1,52 +1,40 @@
-use crate::player::CurrentPlayerMarker;
-use crate::world::ClientWorldMap;
-use crate::{
-    camera::BlockRaycastSet,
-    constants::{CUBE_SIZE, INTERACTION_DISTANCE},
-};
-use bevy::{math::NormedVectorSpace, prelude::*};
-use bevy_mod_raycast::prelude::RaycastSource;
+use crate::constants::INTERACTION_DISTANCE;
+use crate::player::{CurrentPlayerMarker, ViewMode};
+use crate::world::{raycast, ClientWorldMap};
+use bevy::prelude::*;
 
 #[derive(Component)]
 pub struct BlockText;
 
-// Updates UI to tell which block the player is looking at (or none if no block is within INTERACTION_DISTANCE)
+// Updates UI to display the block the player is looking at (or none if no block is within INTERACTION_DISTANCE)
 pub fn block_text_update_system(
     player: Query<&Transform, With<CurrentPlayerMarker>>,
     world_map: Res<ClientWorldMap>,
-    mut query: Query<&mut Text, With<BlockText>>,
-    raycast_source: Query<&RaycastSource<BlockRaycastSet>>, // raycast (to get current "selected" block)
+    mut query: Query<(&mut Text, &mut TextColor), With<BlockText>>,
+    camera_query: Query<&Transform, With<Camera>>,
+    view_mode: Res<ViewMode>,
 ) {
-    let raycast_source = raycast_source.single();
-
-    let mut col = Color::srgb(1., 1., 1.);
+    let mut col = Color::srgb(1.0, 1.0, 1.0);
     let mut txt = "<none>".to_string();
 
-    if let Some((_entity, intersection)) = raycast_source.intersections().first() {
+    let camera_transform = camera_query.single();
+    let player_transform = player.single();
+
+    let maybe_block = raycast(&world_map, camera_transform, player_transform, *view_mode);
+
+    if let Some(res) = maybe_block {
+        let pos = res.position;
         // Check if block is close enough to the player
-        if (intersection.position() - player.single().translation).norm() < INTERACTION_DISTANCE {
-            let block_pos = intersection.position() - intersection.normal() * (CUBE_SIZE / 2.);
-            let vec = IVec3::new(
-                block_pos.x.round() as i32,
-                block_pos.y.round() as i32,
-                block_pos.z.round() as i32,
-            );
-            let block = world_map.get_block_by_coordinates(&vec);
-            let block = match block {
-                Some(v) => v,
-                None => return,
-            };
+        let block_pos = Vec3::new(pos.x as f32, pos.y as f32, pos.z as f32);
+        if (block_pos - player.single().translation).length() < INTERACTION_DISTANCE {
             col = Color::WHITE;
-            txt = format!(
-                "{:?} | pos = {}",
-                block,
-                intersection.position().xyz().round()
-            );
+            txt = format!("{:?} pos = ({}, {}, {})", res.block, pos.x, pos.y, pos.z);
         }
     }
 
-    for mut text in query.iter_mut() {
-        text.sections[1].style.color = col;
-        text.sections[1].value = txt.clone();
+    for (mut text, mut color) in query.iter_mut() {
+        // Update the text content
+        **text = txt.clone();
+        **color = col;
     }
 }
