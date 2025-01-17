@@ -163,6 +163,7 @@ pub fn game_plugin(app: &mut App) {
                 upload_player_inputs_system,
                 send_player_position_to_server,
                 spawn_player,
+                player_labels_system,
             )
                 .run_if(in_state(GameState::Game)),
         )

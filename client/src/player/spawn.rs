@@ -1,8 +1,9 @@
 use crate::{
     network::{CurrentPlayerProfile, TargetServer, TargetServerState},
-    player::PlayerMaterialHandle,
+    player::{PlayerLabel, PlayerMaterialHandle},
     GameState,
 };
+use bevy::color::palettes::css::ORANGE;
 use bevy::prelude::*;
 use shared::messages::{PlayerId, PlayerSpawnEvent};
 
@@ -65,6 +66,7 @@ pub fn spawn_player(
     mut ev_spawn: EventReader<PlayerSpawnEvent>,
     mut target_server: ResMut<TargetServer>,
     players: Query<&Player>,
+    assets: Res<AssetServer>,
 ) {
     let current_id = player_profile.into_inner().id;
     let spawn_coords = Vec3::new(7.5, 80.0, 7.5);
@@ -90,6 +92,8 @@ pub fn spawn_player(
 
         info!("Spawning new player object: {}", player.id);
 
+        let player_name = "Player";
+
         let mut entity = commands.spawn((
             StateScoped(GameState::Game),
             Transform::from_translation(spawn_coords),
@@ -104,13 +108,45 @@ pub fn spawn_player(
                 handle: materials.add(color),
             },
             player,
-            Name::new("Player"),
+            Name::new(player_name),
         ));
+
+        // We need the full version of this font so we can use box drawing characters.
+        let text_style = TextFont {
+            font: assets.load("fonts/FiraMono-Medium.ttf"),
+            ..default()
+        };
+
+        let label_text_style = (text_style.clone(), TextColor(ORANGE.into()));
 
         if is_current_player {
             target_server.state = TargetServerState::FullyReady;
             entity.insert(CurrentPlayerMarker {});
             info!("Inserted current player marker");
         }
+
+        let entity_id = entity.id();
+
+        commands
+            .spawn((
+                Node {
+                    position_type: PositionType::Absolute,
+                    ..default()
+                },
+                PlayerLabel { entity: entity_id },
+                StateScoped(GameState::Game),
+            ))
+            .with_children(|parent| {
+                parent.spawn((
+                    Text::new(player_name),
+                    label_text_style.clone(),
+                    Node {
+                        position_type: PositionType::Absolute,
+                        bottom: Val::ZERO,
+                        ..default()
+                    },
+                    TextLayout::default().with_no_wrap(),
+                ));
+            });
     }
 }
