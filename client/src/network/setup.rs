@@ -13,6 +13,7 @@ use crate::player::{CurrentPlayerMarker, Player};
 use crate::world::render_distance::RenderDistance;
 use crate::world::time::ClientTime;
 use crate::world::WorldRenderRequestUpdateEvent;
+use crate::PlayerNameSupplied;
 use bevy_renet::renet::DefaultChannel;
 use bincode::Options;
 use shared::messages::{
@@ -45,6 +46,19 @@ impl CurrentPlayerProfile {
         Self {
             id,
             name: format!("Player-{}", id),
+        }
+    }
+}
+
+impl FromWorld for CurrentPlayerProfile {
+    fn from_world(world: &mut World) -> Self {
+        let player_name = world.get_resource::<PlayerNameSupplied>();
+        match player_name {
+            Some(player_name) => Self {
+                id: 0,
+                name: player_name.name.clone(),
+            },
+            None => CurrentPlayerProfile::new(),
         }
     }
 }

@@ -44,6 +44,9 @@ struct Args {
 
     #[arg(long)]
     special_flag: bool,
+
+    #[arg(short, long, help = "Player name to use for the game")]
+    player_name: Option<String>,
 }
 
 #[derive(Component)]
@@ -74,6 +77,11 @@ pub struct KeyMap {
 #[derive(Resource, Debug)]
 pub struct TexturePath {
     pub path: String,
+}
+
+#[derive(Resource, Debug)]
+pub struct PlayerNameSupplied {
+    pub name: String,
 }
 
 fn main() {
@@ -151,6 +159,9 @@ fn main() {
         })
         .insert_resource(game_folder_paths)
         .insert_resource(special_flag)
+        .insert_resource(PlayerNameSupplied {
+            name: args.player_name.unwrap_or_else(|| "Player".to_string()),
+        })
         .init_state::<GameState>()
         .enable_state_scoped_entities::<GameState>()
         // Adds the plugins for each state

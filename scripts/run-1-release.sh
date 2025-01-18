@@ -9,4 +9,5 @@ cargo run \
 -- \
 --game-folder-path $PWD/appdata/client-1 \
 --assets-folder-path $PWD/data \
---special-flag
+--special-flag \
+--player-name PlayerOne

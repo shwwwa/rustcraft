@@ -92,7 +92,7 @@ pub fn spawn_player(
 
         info!("Spawning new player object: {}", player.id);
 
-        let player_name = "Player";
+        let player_name = event.name.clone();
 
         let mut entity = commands.spawn((
             StateScoped(GameState::Game),
@@ -107,8 +107,8 @@ pub fn spawn_player(
             PlayerMaterialHandle {
                 handle: materials.add(color),
             },
-            player,
-            Name::new(player_name),
+            player.clone(),
+            Name::new(player_name.clone()),
         ));
 
         // We need the full version of this font so we can use box drawing characters.

@@ -85,7 +85,7 @@ pub fn game_plugin(app: &mut App) {
         .insert_resource(ViewMode::FirstPerson)
         .insert_resource(DebugOptions::default())
         .insert_resource(Inventory::new())
-        .insert_resource(CurrentPlayerProfile::new())
+        .init_resource::<CurrentPlayerProfile>()
         .init_resource::<ParticleAssets>()
         .init_resource::<FoxFeetTargets>()
         .add_event::<WorldRenderRequestUpdateEvent>()
