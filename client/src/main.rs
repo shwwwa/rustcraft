@@ -2,6 +2,7 @@ mod camera;
 mod constants;
 mod game;
 mod input;
+mod mob;
 mod network;
 mod player;
 mod ui;
