@@ -11,8 +11,8 @@ use bevy::prelude::*;
 use bevy_renet::renet::{DefaultChannel, RenetServer, ServerEvent};
 use bincode::Options;
 use shared::messages::{
-    AuthRegisterResponse, ChatConversation, ClientToServerMessage, PlayerSpawnEvent,
-    ServerToClientMessage,
+    AuthRegisterResponse, ChatConversation, ClientToServerMessage, FullChatMessage,
+    PlayerSpawnEvent, ServerToClientMessage,
 };
 use shared::world::ServerWorldMap;
 use shared::GameServerConfig;
@@ -147,7 +147,18 @@ fn server_update_system(
                 }
                 ClientToServerMessage::ChatMessage(chat_msg) => {
                     info!("Chat message received: {:?}", &chat_msg);
-                    chat_conversation.messages.push(chat_msg);
+                    let current_timestamp: u64 = std::time::SystemTime::now()
+                        .duration_since(std::time::UNIX_EPOCH)
+                        .unwrap()
+                        .as_millis() as u64;
+
+                    let current_author = lobby.players.get(&client_id).unwrap().clone();
+
+                    chat_conversation.messages.push(FullChatMessage {
+                        author: current_author,
+                        content: chat_msg.content,
+                        timestamp: current_timestamp,
+                    });
                     ev_chat.send(ChatMessageEvent);
                 }
                 ClientToServerMessage::Exit(order) => {

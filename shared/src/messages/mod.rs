@@ -18,7 +18,7 @@ pub type PlayerId = u64;
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub enum ClientToServerMessage {
     AuthRegisterRequest(AuthRegisterRequest),
-    ChatMessage(ChatMessage),
+    ChatMessage(ChatMessageRequest),
     Exit(ExitOrder),
     PlayerInputs(PlayerInputs),
     WorldUpdateRequest {

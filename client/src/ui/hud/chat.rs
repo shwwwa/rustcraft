@@ -192,10 +192,10 @@ pub fn render_chat(
     if let Some(conv) = &cached_conv.data {
         for message in &conv.messages {
             // If message too old, don't render
-            if message.date <= *last_render_ts {
+            if message.timestamp <= *last_render_ts {
                 continue;
             }
-            *last_render_ts = message.date;
+            *last_render_ts = message.timestamp;
             let msg = commands
                 .spawn((
                     MessageAnimator {
@@ -205,7 +205,7 @@ pub fn render_chat(
                             .as_millis() as u64,
                     },
                     (
-                        Text::new(format!("<{}> : {}", message.author_name, message.content)),
+                        Text::new(format!("<{}> : {}", message.author, message.content)),
                         TextFont {
                             font: asset_server.load("./fonts/RustCraftRegular-Bmg3.otf"),
                             font_size: 17.,

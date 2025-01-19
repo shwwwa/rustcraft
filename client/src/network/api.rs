@@ -1,7 +1,7 @@
 use bevy::{math::IVec3, prelude::ResMut};
 use bevy_renet::renet::{DefaultChannel, RenetClient};
 use bincode::Options;
-use shared::messages::{ChatMessage, ClientToServerMessage, SaveWorldRequest};
+use shared::messages::{ChatMessageRequest, ClientToServerMessage, SaveWorldRequest};
 use shared::world::BlockData;
 
 pub enum NetworkAction {
@@ -14,22 +14,16 @@ pub enum NetworkAction {
     SaveWorldRequest,
     BlockInteraction {
         position: IVec3,
-        block_type: Option<BlockData>, // None = suppression, Some = ajout
+        block_type: Option<BlockData>, // None = delete, Some = add
     },
 }
 
 pub fn send_network_action(client: &mut ResMut<RenetClient>, action: NetworkAction) {
     match action {
         NetworkAction::ChatMessage(msg) => {
-            let timestamp_ms = std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .unwrap()
-                .as_millis() as u64;
             let input_message = bincode::options()
-                .serialize(&ClientToServerMessage::ChatMessage(ChatMessage {
-                    author_name: "User".into(),
+                .serialize(&ClientToServerMessage::ChatMessage(ChatMessageRequest {
                     content: msg,
-                    date: timestamp_ms,
                 }))
                 .unwrap();
 
