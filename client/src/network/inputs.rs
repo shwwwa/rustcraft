@@ -3,9 +3,10 @@ use crate::input::keyboard::is_action_pressed;
 use crate::KeyMap;
 use bevy::input::ButtonInput;
 use bevy::prelude::*;
-use bevy_renet::renet::{DefaultChannel, RenetClient};
-use bincode::Options;
+use bevy_renet::renet::RenetClient;
 use shared::messages::{ClientToServerMessage, NetworkPlayerInput, PlayerInputs};
+
+use super::SendGameMessageExtension;
 
 pub fn upload_player_inputs_system(
     mut client: ResMut<RenetClient>,
@@ -40,6 +41,5 @@ pub fn upload_player_inputs_system(
         actions,
         direction: Vec3::ZERO,
     });
-    let payload = bincode::options().serialize(&msg).unwrap();
-    client.send_message(DefaultChannel::ReliableOrdered, payload);
+    client.send_game_message(msg);
 }

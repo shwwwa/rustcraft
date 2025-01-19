@@ -1,6 +1,7 @@
 pub mod api;
 mod chat;
 mod cleanup;
+pub mod extensions;
 mod inputs;
 pub mod player;
 pub mod save;
@@ -9,6 +10,7 @@ mod world;
 
 pub use chat::*;
 pub use cleanup::*;
+pub use extensions::SendGameMessageExtension;
 pub use inputs::*;
 pub use player::*;
 pub use setup::*;

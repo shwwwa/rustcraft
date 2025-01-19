@@ -28,6 +28,8 @@ use std::{net::UdpSocket, thread, time::SystemTime};
 use crate::world::ClientWorldMap;
 use shared::GameFolderPaths;
 
+use super::SendGameMessageExtension;
+
 #[derive(Debug, Clone, PartialEq)]
 pub enum TargetServerState {
     Initial,
@@ -272,8 +274,7 @@ pub fn establish_authenticated_connection_to_server(
         let auth_msg = ClientToServerMessage::AuthRegisterRequest(AuthRegisterRequest {
             username: username.clone(),
         });
-        let auth_msg_encoded = bincode::options().serialize(&auth_msg).unwrap();
-        client.send_message(DefaultChannel::ReliableOrdered, auth_msg_encoded);
+        client.send_game_message(auth_msg);
         target.state = TargetServerState::Establising;
     }
 
