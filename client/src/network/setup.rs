@@ -19,6 +19,8 @@ use bincode::Options;
 use shared::messages::{
     AuthRegisterRequest, ChatConversation, ClientToServerMessage, PlayerId, PlayerSpawnEvent,
 };
+use std::collections::hash_map::DefaultHasher;
+use std::hash::{Hash, Hasher};
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 use std::{net::UdpSocket, thread, time::SystemTime};
 
@@ -50,12 +52,18 @@ impl CurrentPlayerProfile {
     }
 }
 
+fn hash_string_to_u64(input: &str) -> u64 {
+    let mut hasher = DefaultHasher::new();
+    input.hash(&mut hasher);
+    hasher.finish()
+}
+
 impl FromWorld for CurrentPlayerProfile {
     fn from_world(world: &mut World) -> Self {
         let player_name = world.get_resource::<PlayerNameSupplied>();
         match player_name {
             Some(player_name) => Self {
-                id: 0,
+                id: hash_string_to_u64(&player_name.name),
                 name: player_name.name.clone(),
             },
             None => CurrentPlayerProfile::new(),
@@ -203,14 +211,18 @@ pub fn init_server_connection(
         let client = RenetClient::new(get_shared_renet_config());
         world.insert_resource(client);
 
-        info!("Attempting to connect to: {}", addr);
-
         let authentication = ClientAuthentication::Unsecure {
             server_addr: addr,
             client_id: id,
             user_data: None,
             protocol_id: shared::PROTOCOL_ID,
         };
+
+        info!(
+            "Attempting to connect to: {} with data {:?}",
+            addr, authentication
+        );
+
         let socket = UdpSocket::bind("0.0.0.0:0").unwrap();
         let current_time = SystemTime::now()
             .duration_since(SystemTime::UNIX_EPOCH)
