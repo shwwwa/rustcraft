@@ -6,8 +6,6 @@ use shared::GameServerConfig;
 
 mod init;
 mod network;
-mod player;
-mod time;
 mod world;
 
 #[derive(Parser, Debug)]

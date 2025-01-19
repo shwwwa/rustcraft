@@ -1,5 +1,4 @@
-use crate::init::ServerTime;
-use crate::init::TickCounter;
+use crate::init::{ServerTime, TICKS_PER_SECOND};
 use crate::network::utils::format_bytes;
 use crate::world::generation::generate_chunk;
 use bevy::math::IVec3;
@@ -23,7 +22,7 @@ pub struct WorldUpdateRequestEvent {
 
 pub fn send_world_update(
     mut server: ResMut<RenetServer>,
-    ticker: Res<TickCounter>,
+    ticker: Res<ServerTime>,
     seed: Res<WorldSeed>,
     mut world_map: ResMut<ServerWorldMap>,
     mut ev_update: EventReader<WorldUpdateRequestEvent>,
@@ -32,7 +31,7 @@ pub fn send_world_update(
     for event in ev_update.read() {
         let payload = bincode::options()
             .serialize(&ServerToClientMessage::WorldUpdate(WorldUpdate {
-                tick: ticker.tick,
+                tick: ticker.0,
                 player_positions: world_map.player_positions.clone(),
                 new_map: {
                     let mut map: HashMap<IVec3, ServerChunk> = HashMap::new();
@@ -85,11 +84,11 @@ pub fn send_world_update(
 
 pub fn broadcast_world_state(
     mut server: ResMut<RenetServer>,
-    ticker: Res<TickCounter>,
+    ticker: Res<ServerTime>,
     mut world_map: ResMut<ServerWorldMap>,
     time: Res<ServerTime>,
 ) {
-    if ticker.tick % 10 != 0 {
+    if ticker.0 % (2 * TICKS_PER_SECOND) != 0 {
         return;
     }
 
@@ -100,7 +99,7 @@ pub fn broadcast_world_state(
     let payload = bincode::options()
         .serialize(&ServerToClientMessage::WorldUpdate(to_network(
             &mut world_map,
-            ticker.tick,
+            ticker.0,
         )))
         .unwrap();
     server.broadcast_message(DefaultChannel::ReliableUnordered, payload);

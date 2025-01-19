@@ -1,9 +1,7 @@
-use crate::init::{ServerLobby, TickCounter};
+use crate::init::{ServerLobby, ServerTime, TICKS_PER_SECOND};
 use crate::network::broadcast_chat::*;
 use crate::network::broadcast_world::WorldUpdateRequestEvent;
 use crate::network::broadcast_world::*;
-use crate::player::handle_player_inputs;
-use crate::time::update_server_time;
 use crate::world;
 use crate::world::save::SaveRequestEvent;
 use crate::world::BlockInteractionEvent;
@@ -48,11 +46,10 @@ pub fn register_systems(app: &mut App) {
 
 fn server_update_system(
     mut server_events: EventReader<ServerEvent>,
-    (mut server, mut chat_conversation, mut lobby, tick): (
+    (mut server, mut chat_conversation, mut lobby): (
         ResMut<RenetServer>,
         ResMut<ChatConversation>,
         ResMut<ServerLobby>,
-        Res<TickCounter>,
     ),
     (
         mut ev_chat,
@@ -174,7 +171,7 @@ fn server_update_system(
                     }
                 }
                 ClientToServerMessage::PlayerInputs(inputs) => {
-                    handle_player_inputs(inputs, &tick);
+                    debug!("Not implemented yet: {:?}", inputs);
                 }
                 ClientToServerMessage::SaveWorldRequest(save_req) => {
                     debug!(
@@ -225,7 +222,9 @@ fn server_update_system(
     }
 }
 
-// fn generate_session_token() -> u128 {
-//     let random_value: u128 = random();
-//     random_value
-// }
+fn update_server_time(mut time: ResMut<ServerTime>) {
+    if (time.0 % (5 * TICKS_PER_SECOND)) == 0 {
+        debug!("Server time: {}", time.0);
+    }
+    time.0 += 1;
+}

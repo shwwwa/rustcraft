@@ -19,6 +19,8 @@ use crate::world::load_from_file::{load_world_map, load_world_seed, load_world_t
 
 use std::net::{SocketAddr, UdpSocket};
 
+pub const TICKS_PER_SECOND: u64 = 20;
+
 #[derive(Resource, Serialize, Deserialize, Debug, Clone)]
 pub struct ServerTime(pub u64);
 
@@ -64,7 +66,7 @@ pub fn init(socket: UdpSocket, config: GameServerConfig, game_folder_path: Strin
     let mut app = App::new();
     app.add_plugins(
         MinimalPlugins.set(ScheduleRunnerPlugin::run_loop(Duration::from_secs_f64(
-            1.0 / 60.0,
+            1.0 / TICKS_PER_SECOND as f64,
         ))),
     );
 
@@ -124,37 +126,5 @@ pub fn init(socket: UdpSocket, config: GameServerConfig, game_folder_path: Strin
 
     dispatcher::register_systems(&mut app);
 
-    setup_heartbeat(&mut app);
-
     app.run();
-}
-
-#[derive(Resource)]
-pub struct TickCounter {
-    pub(crate) tick: u64,
-}
-
-#[derive(Resource)]
-struct HeartbeatTimer {
-    timer: Timer,
-}
-
-fn setup_heartbeat(app: &mut App) {
-    app.insert_resource(HeartbeatTimer {
-        timer: Timer::new(Duration::from_secs(1), TimerMode::Repeating),
-    });
-    app.insert_resource(TickCounter { tick: 0 });
-    app.add_systems(Update, heartbeat_system);
-}
-
-fn heartbeat_system(
-    time: Res<Time>,
-    mut ticker: ResMut<TickCounter>,
-    mut timer: ResMut<HeartbeatTimer>,
-) {
-    ticker.tick += 1;
-    timer.timer.tick(time.delta());
-    if timer.timer.finished() {
-        trace!("Server heartbeat, tick={}", ticker.tick);
-    }
 }
