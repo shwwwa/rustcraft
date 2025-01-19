@@ -16,6 +16,7 @@ use bevy::{
         RenderPlugin,
     },
 };
+use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use clap::Parser;
 use constants::{TEXTURE_PATH_BASE, TEXTURE_PATH_CUSTOM};
 use input::{data::GameAction, keyboard::get_bindings};
@@ -147,6 +148,7 @@ fn main() {
                 ..Default::default()
             }),
     );
+    app.add_plugins(WorldInspectorPlugin::new());
 
     app.add_event::<LoadWorldEvent>();
     network::add_base_netcode(&mut app);

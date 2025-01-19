@@ -1,9 +1,6 @@
 use std::collections::HashMap;
 
-use crate::mob::{
-    move_fox_towards_player, observe_on_step, setup_fox, setup_fox_once_loaded, simulate_particles,
-    FoxFeetTargets, ParticleAssets,
-};
+use crate::mob::*;
 use crate::ui::hud::chat::{render_chat, setup_chat};
 use bevy::prelude::*;
 use bevy_atmosphere::prelude::*;
@@ -88,6 +85,7 @@ pub fn game_plugin(app: &mut App) {
         .init_resource::<CurrentPlayerProfile>()
         .init_resource::<ParticleAssets>()
         .init_resource::<FoxFeetTargets>()
+        .init_resource::<TargetedMob>()
         .add_event::<WorldRenderRequestUpdateEvent>()
         .add_event::<PlayerSpawnEvent>()
         .add_systems(
@@ -164,6 +162,8 @@ pub fn game_plugin(app: &mut App) {
                 setup_fox_once_loaded,
                 simulate_particles,
                 move_fox_towards_player,
+                add_mob_markers,
+                update_targetted_mob_color,
             ),
         )
         .add_observer(observe_on_step)
