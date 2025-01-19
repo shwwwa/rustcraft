@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::world::ServerChunk;
+use crate::world::{ServerChunk, ServerMob};
 use bevy::math::{IVec3, Vec3};
 use serde::{Deserialize, Serialize};
 
@@ -12,4 +12,5 @@ pub struct WorldUpdate {
     pub new_map: HashMap<IVec3, ServerChunk>,
     pub player_positions: HashMap<PlayerId, Vec3>,
     pub time: u64,
+    pub mobs: Vec<ServerMob>,
 }

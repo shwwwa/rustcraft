@@ -6,7 +6,7 @@ use bevy::prelude::*;
 use bevy_renet::renet::{DefaultChannel, RenetClient};
 use bincode::Options;
 use shared::{
-    messages::{PlayerSpawnEvent, ServerToClientMessage},
+    messages::{mob::MobUpdateEvent, PlayerSpawnEvent, ServerToClientMessage},
     world::{block_to_chunk_coord, chunk_in_radius},
 };
 
@@ -26,7 +26,8 @@ pub fn update_world_from_network(
     players: &mut Query<(&mut Transform, &Player), With<Player>>,
     current_player_entity: Query<Entity, With<CurrentPlayerMarker>>,
     render_distance: Res<RenderDistance>,
-    ev_spawn: &mut EventWriter<PlayerSpawnEvent>,
+    ev_player_spawn: &mut EventWriter<PlayerSpawnEvent>,
+    ev_mob_update: &mut EventWriter<MobUpdateEvent>,
 ) {
     let (player_pos, current_player) = players.get(current_player_entity.single()).unwrap();
     let current_player_id = current_player.id;
@@ -88,12 +89,21 @@ pub fn update_world_from_network(
                     }
                 }
 
+                for mob in world_update.mobs {
+                    debug!("ServerMob received: {:?}", mob);
+                    ev_mob_update.send(MobUpdateEvent { mob });
+                }
+
                 // get current time
                 client_time.0 = world_update.time;
             }
             ServerToClientMessage::PlayerSpawn(spawn_event) => {
                 info!("Received SINGLE spawn event {:?}", spawn_event);
-                ev_spawn.send(spawn_event);
+                ev_player_spawn.send(spawn_event);
+            }
+            ServerToClientMessage::MobUpdate(update_event) => {
+                info!("Received mob update event {:?}", update_event);
+                // this is not currently used
             }
             _ => {}
         }

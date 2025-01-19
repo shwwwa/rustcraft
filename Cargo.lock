@@ -1800,7 +1800,6 @@ dependencies = [
  "serde",
  "server",
  "shared",
- "ulid",
 ]
 
 [[package]]
@@ -4201,6 +4200,7 @@ dependencies = [
  "ron 0.6.6",
  "serde",
  "shared",
+ "ulid",
 ]
 
 [[package]]

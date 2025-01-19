@@ -1,4 +1,5 @@
 mod init;
+mod mob;
 mod network;
 mod world;
 

@@ -1,5 +1,6 @@
 mod auth;
 mod chat;
+pub mod mob;
 pub mod player;
 mod system;
 mod world;
@@ -8,6 +9,7 @@ use crate::world::BlockData;
 pub use auth::*;
 use bevy::math::{IVec3, Vec3};
 pub use chat::*;
+use mob::MobUpdateEvent;
 pub use player::*;
 use serde::{Deserialize, Serialize};
 pub use system::*;
@@ -43,4 +45,5 @@ pub enum ServerToClientMessage {
     ChatConversation(ChatConversation),
     WorldUpdate(WorldUpdate),
     PlayerSpawn(PlayerSpawnEvent),
+    MobUpdate(MobUpdateEvent),
 }

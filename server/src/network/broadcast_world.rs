@@ -70,6 +70,7 @@ pub fn send_world_update(
                     map
                 },
                 time: world_map.time,
+                mobs: world_map.mobs.clone(),
             }))
             .unwrap();
 
@@ -120,5 +121,6 @@ fn to_network(world_map: &mut ServerWorldMap, tick: u64) -> WorldUpdate {
             m
         },
         time: world_map.time,
+        mobs: world_map.mobs.clone(),
     }
 }

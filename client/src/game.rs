@@ -5,6 +5,7 @@ use crate::ui::hud::chat::{render_chat, setup_chat};
 use bevy::prelude::*;
 use bevy_atmosphere::prelude::*;
 use inventory::Inventory;
+use shared::messages::mob::MobUpdateEvent;
 use shared::messages::PlayerSpawnEvent;
 
 use crate::world::time::ClientTime;
@@ -88,6 +89,7 @@ pub fn game_plugin(app: &mut App) {
         .init_resource::<TargetedMob>()
         .add_event::<WorldRenderRequestUpdateEvent>()
         .add_event::<PlayerSpawnEvent>()
+        .add_event::<MobUpdateEvent>()
         .add_systems(
             OnEnter(GameState::PreGameLoading),
             (
@@ -104,7 +106,7 @@ pub fn game_plugin(app: &mut App) {
                 establish_authenticated_connection_to_server,
                 create_all_atlases,
                 check_pre_loading_complete,
-                spawn_player,
+                spawn_players_system,
             )
                 .run_if(in_state(GameState::PreGameLoading)),
         )
@@ -117,7 +119,6 @@ pub fn game_plugin(app: &mut App) {
                 setup_hud,
                 setup_chat,
                 setup_pause_menu,
-                setup_fox,
             )
                 .chain(),
         )
@@ -161,7 +162,7 @@ pub fn game_plugin(app: &mut App) {
             (
                 setup_fox_once_loaded,
                 simulate_particles,
-                move_fox_towards_player,
+                // move_fox_towards_player,
                 add_mob_markers,
                 update_targetted_mob_color,
             ),
@@ -178,7 +179,8 @@ pub fn game_plugin(app: &mut App) {
                 network_failure_handler,
                 upload_player_inputs_system,
                 send_player_position_to_server,
-                spawn_player,
+                spawn_players_system,
+                spawn_mobs_system,
                 player_labels_system,
             )
                 .run_if(in_state(GameState::Game)),

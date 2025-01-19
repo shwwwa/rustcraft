@@ -41,7 +41,9 @@ pub fn register_systems(app: &mut App) {
     app.add_systems(Update, world::save::save_world_system);
     app.add_systems(Update, world::handle_block_interactions);
 
-    app.add_systems(Update, update_server_time);
+    app.add_systems(Update, crate::mob::manage_mob_spawning_system);
+
+    app.add_systems(PostUpdate, update_server_time);
 }
 
 fn server_update_system(
@@ -100,7 +102,6 @@ fn server_update_system(
                         return;
                     }
 
-                    // let new_session_token = generate_session_token();
                     lobby.players.insert(client_id, auth_req.username.clone());
                     debug!("New lobby : {:?}", lobby);
 
@@ -170,8 +171,8 @@ fn server_update_system(
                         info!("Player {:?} disconnected", client_id);
                     }
                 }
-                ClientToServerMessage::PlayerInputs(inputs) => {
-                    debug!("Not implemented yet: {:?}", inputs);
+                ClientToServerMessage::PlayerInputs(_inputs) => {
+                    // debug!("Not implemented yet: {:?}", inputs);
                 }
                 ClientToServerMessage::SaveWorldRequest(save_req) => {
                     debug!(

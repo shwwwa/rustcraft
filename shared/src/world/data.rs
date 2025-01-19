@@ -14,6 +14,7 @@ use std::fmt::Debug;
 use super::BlockData;
 use super::ItemId;
 use super::ItemType;
+use super::ServerMob;
 
 #[derive(Clone, Default, Serialize, Deserialize, Debug)]
 pub struct ServerChunk {
@@ -28,6 +29,7 @@ pub struct ServerWorldMap {
     pub map: HashMap<IVec3, ServerChunk>,
     pub chunks_to_update: Vec<IVec3>,
     pub player_positions: HashMap<PlayerId, Vec3>,
+    pub mobs: Vec<ServerMob>,
     pub time: u64,
 }
 

@@ -4,6 +4,7 @@ use bevy_renet::netcode::{
 };
 use bevy_renet::{renet::RenetClient, RenetClientPlugin};
 use rand::Rng;
+use shared::messages::mob::MobUpdateEvent;
 use shared::{get_shared_renet_config, GameServerConfig};
 
 use crate::menus::solo::SelectedWorld;
@@ -158,7 +159,8 @@ fn poll_reliable_unordered_messages(
     players: &mut Query<(&mut Transform, &Player), With<Player>>,
     current_player_entity: Query<Entity, With<CurrentPlayerMarker>>,
     render_distance: Res<RenderDistance>,
-    ev_spawn: &mut EventWriter<PlayerSpawnEvent>,
+    ev_player_spawn: &mut EventWriter<PlayerSpawnEvent>,
+    ev_mob_update: &mut EventWriter<MobUpdateEvent>,
 ) {
     update_world_from_network(
         client,
@@ -168,7 +170,8 @@ fn poll_reliable_unordered_messages(
         players,
         current_player_entity,
         render_distance,
-        ev_spawn,
+        ev_player_spawn,
+        ev_mob_update,
     );
 }
 
@@ -181,7 +184,8 @@ pub fn poll_network_messages(
     mut players: Query<(&mut Transform, &Player), With<Player>>,
     current_player_entity: Query<Entity, With<CurrentPlayerMarker>>,
     render_distance: Res<RenderDistance>,
-    mut ev_spawn: EventWriter<PlayerSpawnEvent>,
+    mut ev_player_spawn: EventWriter<PlayerSpawnEvent>,
+    mut ev_mob_update: EventWriter<MobUpdateEvent>,
 ) {
     poll_reliable_ordered_messages(&mut client, &mut chat_state);
     poll_reliable_unordered_messages(
@@ -192,7 +196,8 @@ pub fn poll_network_messages(
         &mut players,
         current_player_entity,
         render_distance,
-        &mut ev_spawn,
+        &mut ev_player_spawn,
+        &mut ev_mob_update,
     );
 }
 

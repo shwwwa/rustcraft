@@ -4,9 +4,6 @@ use std::time::Duration;
 
 use bevy::{animation::AnimationTargetId, color::palettes::css::WHITE, prelude::*};
 use rand::{thread_rng, Rng};
-use ulid::Ulid;
-
-use crate::player::CurrentPlayerMarker;
 
 use super::{MobMarker, MobRoot, TargetedMob};
 
@@ -45,14 +42,12 @@ pub fn observe_on_step(
     }
 }
 
-fn create_new_mob_id() -> u128 {
-    Ulid::new().0
-}
-
 pub fn setup_fox(
-    mut commands: Commands,
-    asset_server: Res<AssetServer>,
-    mut graphs: ResMut<Assets<AnimationGraph>>,
+    id: u128,
+    spawn_pos: Vec3,
+    commands: &mut Commands,
+    asset_server: &Res<AssetServer>,
+    graphs: &mut ResMut<Assets<AnimationGraph>>,
 ) {
     // Build the animation graph
     let (graph, node_indices) = AnimationGraph::from_clips([
@@ -68,32 +63,25 @@ pub fn setup_fox(
         graph: graph_handle,
     });
 
-    // let spawn_positions = [Vec3::new(50.0, 70.0, 50.0), Vec3::new(-40.0, 80.0, 30.0)];
-
-    let spawn_positions = [Vec3::new(15.0, 70.0, 20.0)];
-
-    let id = create_new_mob_id();
     let name = "Fox".to_string();
 
-    for spawn_pos in spawn_positions {
-        // Fox
-        let fox = commands
-            .spawn((
-                SceneRoot(asset_server.load(GltfAssetLabel::Scene(0).from_asset(FOX_PATH))),
-                Transform::from_translation(spawn_pos).with_scale(Vec3::splat(0.01)),
-                MobRoot {
-                    name: name.clone(),
-                    id,
-                },
-                MobMarker {
-                    name: name.clone(),
-                    id,
-                },
-            ))
-            .id();
+    // Fox
+    let fox = commands
+        .spawn((
+            SceneRoot(asset_server.load(GltfAssetLabel::Scene(0).from_asset(FOX_PATH))),
+            Transform::from_translation(spawn_pos).with_scale(Vec3::splat(0.01)),
+            MobRoot {
+                name: name.clone(),
+                id,
+            },
+            MobMarker {
+                name: name.clone(),
+                id,
+            },
+        ))
+        .id();
 
-        info!("Spawned fox: {:?}", fox);
-    }
+    info!("Spawned fox: {:?}", fox);
 }
 
 // An `AnimationPlayer` is automatically added to the scene when it's ready.
@@ -291,26 +279,27 @@ impl Default for FoxFeetTargets {
     }
 }
 
-pub fn move_fox_towards_player(
-    mut fox_transforms: Query<&mut Transform, With<MobRoot>>,
-    player_transform: Query<&Transform, (With<CurrentPlayerMarker>, Without<MobRoot>)>,
-) {
-    let player_transform = player_transform.get_single();
-    if let Ok(player_transform) = player_transform {
-        for mut fox_transform in &mut fox_transforms.iter_mut() {
-            let direction = player_transform.translation - fox_transform.translation;
-            let direction = direction.normalize();
-            let speed = 0.04;
-            fox_transform.translation += direction * speed;
+// pub fn move_fox_towards_player(
+//     mut fox_transforms: Query<&mut Transform, With<MobRoot>>,
+//     player_transform: Query<&Transform, (With<CurrentPlayerMarker>, Without<MobRoot>)>,
+// ) {
+//     let player_transform = player_transform.get_single();
+//     if let Ok(player_transform) = player_transform {
+//         for mut fox_transform in &mut fox_transforms.iter_mut() {
+//             let direction = player_transform.translation - fox_transform.translation;
+//             let direction = direction.normalize();
+//             let speed = 0.04;
+//             fox_transform.translation += direction * speed;
 
-            let y_angle_to_player = (player_transform.translation.x - fox_transform.translation.x)
-                .atan2(player_transform.translation.z - fox_transform.translation.z);
+//             let y_angle_to_player = (player_transform.translation.x - fox_transform.translation.x)
+//                 .atan2(player_transform.translation.z - fox_transform.translation.z);
 
-            fox_transform.rotation = Quat::from_rotation_y(y_angle_to_player);
-        }
-    }
-}
+//             fox_transform.rotation = Quat::from_rotation_y(y_angle_to_player);
+//         }
+//     }
+// }
 
+// TODO: only update the color of the targeted mob, not all mobs sharing the same material
 pub fn update_targetted_mob_color(
     mut query: Query<(&mut MeshMaterial3d<StandardMaterial>, &MobMarker)>,
     targeted_mob: Res<TargetedMob>,

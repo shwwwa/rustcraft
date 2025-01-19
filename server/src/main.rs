@@ -5,6 +5,7 @@ use clap::Parser;
 use shared::GameServerConfig;
 
 mod init;
+mod mob;
 mod network;
 mod world;
 

@@ -58,7 +58,7 @@ impl Player {
     }
 }
 
-pub fn spawn_player(
+pub fn spawn_players_system(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
