@@ -54,6 +54,7 @@ pub struct BlockData {
     pub id: BlockId,
     pub flipped: bool,
     pub direction: BlockDirection,
+    pub breaking_progress: u8,
 }
 
 impl BlockData {
@@ -62,6 +63,7 @@ impl BlockData {
             id,
             flipped,
             direction,
+            breaking_progress: 0,
         }
     }
 }

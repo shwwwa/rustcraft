@@ -54,22 +54,51 @@ impl ClientWorldMap {
         }
     }
 
-    pub fn remove_block_by_coordinates(&mut self, global_block_pos: &IVec3) -> Option<BlockData> {
-        let block: &BlockData = self.get_block_by_coordinates(global_block_pos)?;
+    pub fn try_to_break_block(&mut self, position: &IVec3) -> Option<(BlockData, bool)> {
+        let block: &BlockData = self.get_block_by_coordinates(position)?;
         let kind: BlockData = *block;
 
-        let chunk_pos: IVec3 = global_block_to_chunk_pos(global_block_pos);
+        let chunk_pos: IVec3 = global_block_to_chunk_pos(position);
 
         let chunk_map: &mut ClientChunk =
             self.map
                 .get_mut(&IVec3::new(chunk_pos.x, chunk_pos.y, chunk_pos.z))?;
 
-        let local_block_pos: IVec3 = to_local_pos(global_block_pos);
+        let local_block_pos: IVec3 = to_local_pos(position);
 
-        chunk_map.map.remove(&local_block_pos);
+        let mut block = chunk_map.map.get_mut(&local_block_pos);
 
-        Some(kind)
+        let data = block.take()?;
+
+        data.breaking_progress += 1;
+
+        // info!("Block breaking progress: {}", data.breaking_progress);
+
+        if data.breaking_progress >= 60 {
+            chunk_map.map.remove(&local_block_pos);
+        } else {
+            return Some((kind, false));
+        }
+
+        Some((kind, true))
     }
+
+    // pub fn remove_block_by_coordinates(&mut self, global_block_pos: &IVec3) -> Option<BlockData> {
+    //     let block: &BlockData = self.get_block_by_coordinates(global_block_pos)?;
+    //     let kind: BlockData = *block;
+
+    //     let chunk_pos: IVec3 = global_block_to_chunk_pos(global_block_pos);
+
+    //     let chunk_map: &mut ClientChunk =
+    //         self.map
+    //             .get_mut(&IVec3::new(chunk_pos.x, chunk_pos.y, chunk_pos.z))?;
+
+    //     let local_block_pos: IVec3 = to_local_pos(global_block_pos);
+
+    //     chunk_map.map.remove(&local_block_pos);
+
+    //     Some(kind)
+    // }
 
     pub fn set_block(&mut self, position: &IVec3, block: BlockData) {
         let x: i32 = position.x;

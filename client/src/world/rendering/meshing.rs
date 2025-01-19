@@ -70,6 +70,8 @@ pub(crate) fn generate_chunk_mesh(
                 uv_coords = uv_map.get("_Default").unwrap();
             }
 
+            let color_multiplier = 1.0 - block.breaking_progress as f32 / 60.0;
+
             if should_render_face(world_map, global_block_pos, &face.direction, &visibility) {
                 render_face(
                     &mut local_vertices,
@@ -80,6 +82,7 @@ pub(crate) fn generate_chunk_mesh(
                     &mut indices_offset,
                     face,
                     uv_coords,
+                    color_multiplier,
                 );
             }
         }
@@ -176,6 +179,7 @@ fn render_face(
     indices_offset: &mut u32,
     face: &Face,
     uv_coords: &UvCoords,
+    color_multiplier: f32,
 ) {
     local_vertices.extend(face.vertices.iter());
 
@@ -184,7 +188,18 @@ fn render_face(
 
     local_normals.extend(face.normals.iter());
 
-    local_colors.extend(face.colors.iter());
+    let colors = face.colors.iter();
+    let mut new_colors = vec![];
+    for color in colors {
+        new_colors.push([
+            color[0] * color_multiplier,
+            color[1] * color_multiplier,
+            color[2] * color_multiplier,
+            color[3],
+        ]);
+    }
+
+    local_colors.extend(new_colors);
 
     local_uvs.extend(face.uvs.iter().map(|uv| {
         // !!! DO NOT REMOVE THE FLOAT OFFSET !!!

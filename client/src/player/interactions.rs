@@ -100,36 +100,36 @@ pub fn handle_block_interactions(
 
     if let Some(res) = maybe_block {
         // Handle left-click for breaking blocks
-        if mouse_input.just_pressed(MouseButton::Left) {
+        if mouse_input.pressed(MouseButton::Left) {
             let pos = res.position;
             let block_pos = Vec3::new(pos.x as f32, pos.y as f32, pos.z as f32);
             // Check if block is close enough to the player
             if (block_pos - p_transform.single_mut().translation).norm() < INTERACTION_DISTANCE {
                 // Remove the hit block
-                let block = world_map.remove_block_by_coordinates(&pos);
+                let res = world_map.try_to_break_block(&pos);
 
-                if let Some(block) = block {
-                    // add the block to the player's inventory
-
-                    // If block has corresponding item, add it to inventory
-                    for (item_id, nb) in block.id.get_drops(1) {
-                        inventory.add_item_to_inventory(ItemStack {
-                            item_id,
-                            item_type: item_id.get_default_type(),
-                            nb,
-                        });
-                    }
-
+                if let Some((block, destroyed)) = res {
                     ev_render.send(WorldRenderRequestUpdateEvent::BlockToReload(pos));
 
-                    // Send the bloc to the serveur to delete it
-                    send_network_action(
-                        &mut client,
-                        NetworkAction::BlockInteraction {
-                            position: pos,
-                            block_type: None, // None signify suppression
-                        },
-                    );
+                    if destroyed {
+                        // If block has corresponding item, add it to inventory
+                        for (item_id, nb) in block.id.get_drops(1) {
+                            inventory.add_item_to_inventory(ItemStack {
+                                item_id,
+                                item_type: item_id.get_default_type(),
+                                nb,
+                            });
+                        }
+
+                        // Send the block to the server to delete it
+                        send_network_action(
+                            &mut client,
+                            NetworkAction::BlockInteraction {
+                                position: pos,
+                                block_type: None, // None signify suppression
+                            },
+                        );
+                    }
                 }
             }
         }
