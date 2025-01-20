@@ -87,6 +87,7 @@ pub fn game_plugin(app: &mut App) {
         .init_resource::<ParticleAssets>()
         .init_resource::<FoxFeetTargets>()
         .init_resource::<TargetedMob>()
+        .insert_resource(Time::<Fixed>::from_hz(20.0))
         .add_event::<WorldRenderRequestUpdateEvent>()
         .add_event::<PlayerSpawnEvent>()
         .add_event::<MobUpdateEvent>()
@@ -163,7 +164,6 @@ pub fn game_plugin(app: &mut App) {
             (
                 setup_fox_once_loaded,
                 simulate_particles,
-                // move_fox_towards_player,
                 add_mob_markers,
                 update_targetted_mob_color,
             ),
@@ -176,7 +176,6 @@ pub fn game_plugin(app: &mut App) {
         .add_systems(
             Update,
             (
-                poll_network_messages,
                 network_failure_handler,
                 upload_player_inputs_system,
                 send_player_position_to_server,
@@ -185,6 +184,10 @@ pub fn game_plugin(app: &mut App) {
                 player_labels_system,
             )
                 .run_if(in_state(GameState::Game)),
+        )
+        .add_systems(
+            FixedUpdate,
+            poll_network_messages.run_if(in_state(GameState::Game)),
         )
         .add_systems(
             OnExit(GameState::Game),

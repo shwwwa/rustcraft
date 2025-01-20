@@ -74,7 +74,7 @@ pub fn send_world_update(
             }))
             .unwrap();
 
-        debug!(
+        info!(
             "Broadcasting world state, number of chunks = {}, payload size: {}",
             chunks_to_update_count,
             format_bytes(payload.len() as u64)

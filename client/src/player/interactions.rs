@@ -1,7 +1,6 @@
 use crate::constants::{CUBE_SIZE, INTERACTION_DISTANCE};
 use crate::mob::{MobMarker, TargetedMob, TargetedMobData};
-use crate::network::api::send_network_action;
-use crate::network::api::NetworkAction;
+use crate::network::SendGameMessageExtension;
 use crate::player::inventory::*;
 use crate::player::spawn::Player;
 use crate::ui::hud::hotbar::Hotbar;
@@ -12,6 +11,7 @@ use bevy::color::palettes::css;
 use bevy::math::NormedVectorSpace;
 use bevy::prelude::*;
 use bevy_renet::renet::RenetClient;
+use shared::messages::ClientToServerMessage;
 use shared::world::{BlockData, ItemStack, ItemType};
 
 use super::{CurrentPlayerMarker, ViewMode};
@@ -80,14 +80,7 @@ pub fn handle_block_interactions(
     }
 
     if mouse_input.just_pressed(MouseButton::Left) && targeted_mob.target.is_some() {
-        // Attack the targeted
-
-        // send_network_action(
-        //     &mut client,
-        //     NetworkAction::MobInteraction {
-        //         mob_id: targeted_mob.id.unwrap(),
-        //     },
-        // );
+        // TODO: Attack the targeted
 
         let target = targeted_mob.target.as_ref().unwrap();
 
@@ -121,14 +114,10 @@ pub fn handle_block_interactions(
                             });
                         }
 
-                        // Send the block to the server to delete it
-                        send_network_action(
-                            &mut client,
-                            NetworkAction::BlockInteraction {
-                                position: pos,
-                                block_type: None, // None signify suppression
-                            },
-                        );
+                        client.send_game_message(ClientToServerMessage::BlockInteraction {
+                            position: pos,
+                            block_type: None,
+                        });
                     }
                 }
             }
@@ -183,14 +172,10 @@ pub fn handle_block_interactions(
 
                         ev_render.send(WorldRenderRequestUpdateEvent::BlockToReload(block_pos));
 
-                        // Send to server the bloc to add
-                        send_network_action(
-                            &mut client,
-                            NetworkAction::BlockInteraction {
-                                position: block_pos,
-                                block_type: Some(block), // Some signify adding
-                            },
-                        );
+                        client.send_game_message(ClientToServerMessage::BlockInteraction {
+                            position: block_pos,
+                            block_type: Some(block),
+                        });
                     }
                 }
             }

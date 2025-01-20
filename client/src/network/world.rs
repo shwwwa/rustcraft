@@ -6,7 +6,9 @@ use bevy::prelude::*;
 use bevy_renet::renet::{DefaultChannel, RenetClient};
 use bincode::Options;
 use shared::{
-    messages::{mob::MobUpdateEvent, PlayerSpawnEvent, ServerToClientMessage},
+    messages::{
+        mob::MobUpdateEvent, ClientToServerMessage, PlayerSpawnEvent, ServerToClientMessage,
+    },
     world::{block_to_chunk_coord, chunk_in_radius},
 };
 
@@ -16,7 +18,7 @@ use crate::world::time::ClientTime;
 use crate::world::RenderDistance;
 use crate::world::WorldRenderRequestUpdateEvent;
 
-use super::api::send_network_action;
+use super::SendGameMessageExtension;
 
 pub fn update_world_from_network(
     client: &mut ResMut<RenetClient>,
@@ -116,12 +118,9 @@ pub fn request_world_update(
     render_distance: &RenderDistance,
     player_chunk_pos: IVec3,
 ) {
-    send_network_action(
-        client,
-        super::api::NetworkAction::WorldUpdateRequest {
-            requested_chunks,
-            player_chunk_pos,
-            render_distance: render_distance.distance,
-        },
-    );
+    client.send_game_message(ClientToServerMessage::WorldUpdateRequest {
+        player_chunk_position: player_chunk_pos,
+        requested_chunks,
+        render_distance: render_distance.distance,
+    });
 }
