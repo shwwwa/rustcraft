@@ -99,14 +99,13 @@ pub fn broadcast_world_state(
     mut server: ResMut<RenetServer>,
     ticker: Res<ServerTime>,
     mut world_map: ResMut<ServerWorldMap>,
-    time: Res<ServerTime>,
 ) {
     if ticker.0 % (2 * TICKS_PER_SECOND) != 0 {
         return;
     }
 
     // Update time value in the "ServerWorldMap" ressource
-    world_map.time = time.0;
+    world_map.time = ticker.0;
 
     trace!("Broadcast world update");
     let payload = bincode::options()

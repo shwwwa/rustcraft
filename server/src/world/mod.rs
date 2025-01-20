@@ -2,16 +2,14 @@ mod data;
 pub mod generation;
 pub mod load_from_file;
 pub mod save;
+pub mod stacks;
 
 use bevy::prelude::Event;
 use bevy::prelude::EventReader;
 use bevy::prelude::IVec3;
 use bevy::prelude::ResMut;
 use bevy::prelude::*;
-use shared::world::BlockData;
-use shared::world::ItemStack;
-use shared::world::ServerItemStack;
-use shared::world::ServerWorldMap;
+use shared::world::{BlockData, ItemStack, ServerItemStack, ServerWorldMap, WorldMap};
 use ulid::Ulid;
 
 #[derive(Event, Debug)]
@@ -49,9 +47,9 @@ pub fn handle_block_interactions(
                             nb,
                         },
                         pos: Vec3::new(
-                            event.position.x as f32 + 0.5,
-                            event.position.y as f32 + 0.5,
-                            event.position.z as f32 + 0.5,
+                            event.position.x as f32,
+                            event.position.y as f32,
+                            event.position.z as f32,
                         ),
                         timestamp: 0,
                     });

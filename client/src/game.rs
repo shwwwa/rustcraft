@@ -169,7 +169,8 @@ pub fn game_plugin(app: &mut App) {
                 add_mob_markers,
                 update_targetted_mob_color,
                 stack_update_system,
-            ),
+            )
+                .run_if(in_state(GameState::Game)),
         )
         .add_observer(observe_on_step)
         .add_systems(

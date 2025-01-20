@@ -7,12 +7,12 @@ use crate::ui::hud::hotbar::Hotbar;
 use crate::ui::hud::UIMode;
 use crate::world::{raycast, ClientWorldMap};
 use crate::world::{FaceDirectionExt, WorldRenderRequestUpdateEvent};
-use bevy::color::palettes::css;
+use bevy::color::palettes::css::{self, BLACK, WHITE};
 use bevy::math::NormedVectorSpace;
 use bevy::prelude::*;
 use bevy_renet::renet::RenetClient;
 use shared::messages::ClientToServerMessage;
-use shared::world::{BlockData, ItemStack, ItemType};
+use shared::world::{BlockData, ItemStack, ItemType, WorldMap};
 
 use super::{CurrentPlayerMarker, ViewMode};
 
@@ -37,6 +37,7 @@ pub fn handle_block_interactions(
     mut ev_render: EventWriter<WorldRenderRequestUpdateEvent>,
     mut ray_cast: MeshRayCast,
     mut commands: Commands,
+    mut gizmos: Gizmos,
 ) {
     let (player_query, mut p_transform, camera_query, hotbar, mob_query) = queries;
     let (
@@ -92,6 +93,14 @@ pub fn handle_block_interactions(
     }
 
     if let Some(res) = maybe_block {
+        // Draw gizmos for the bounding box
+        let center = (res.bbox.max + res.bbox.min) / 2.0;
+        let hsize = res.bbox.max - res.bbox.min;
+        gizmos.cuboid(
+            Transform::from_translation(center.into()).with_scale(hsize.into()),
+            WHITE,
+        );
+
         // Handle left-click for breaking blocks
         if mouse_input.pressed(MouseButton::Left) {
             let pos = res.position;
