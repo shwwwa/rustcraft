@@ -10,7 +10,10 @@ use bevy_renet::{
     renet::RenetServer,
 };
 use serde::{Deserialize, Serialize};
-use shared::{get_shared_renet_config, messages::PlayerId, GameFolderPaths, GameServerConfig};
+use shared::{
+    get_shared_renet_config, messages::PlayerId, GameFolderPaths, GameServerConfig,
+    TICKS_PER_SECOND,
+};
 use std::fmt::Debug;
 use std::time::{Duration, SystemTime};
 use std::{collections::HashMap, net::IpAddr};
@@ -18,8 +21,6 @@ use std::{collections::HashMap, net::IpAddr};
 use crate::world::load_from_file::{load_world_map, load_world_seed, load_world_time};
 
 use std::net::{SocketAddr, UdpSocket};
-
-pub const TICKS_PER_SECOND: u64 = 20;
 
 #[derive(Resource, Serialize, Deserialize, Debug, Clone)]
 pub struct ServerTime(pub u64);

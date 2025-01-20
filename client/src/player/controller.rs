@@ -1,75 +1,57 @@
-use crate::camera::CameraController;
-use crate::constants::GRAVITY;
 use crate::input::data::GameAction;
 use crate::input::keyboard::*;
-use crate::network::request_world_update;
+use crate::network::buffered_client::BufferedInputs;
 use crate::player::ViewMode;
 use crate::ui::hud::debug::DebugOptions;
 use crate::ui::hud::UIMode;
-use crate::world::render_distance::RenderDistance;
 use crate::world::{ClientWorldMap, WorldRenderRequestUpdateEvent};
 use crate::KeyMap;
 use bevy::prelude::*;
-use bevy_renet::renet::RenetClient;
-use shared::players::collision::check_player_collision;
+use shared::messages::NetworkPlayerInput;
 use shared::players::Player;
-use shared::world::{block_to_chunk_coord, chunk_in_radius};
 
 use super::CurrentPlayerMarker;
-use crate::world::FirstChunkReceived;
 
 #[derive(Component)]
 pub struct PlayerMaterialHandle {
     pub handle: Handle<StandardMaterial>,
 }
 
-// System to move the player based on keyboard input
-pub fn player_movement_system(
-    queries: (
-        Query<(&mut Transform, &mut Player, &mut PlayerMaterialHandle), With<CurrentPlayerMarker>>,
-        Query<&Transform, (With<Camera>, With<CameraController>, Without<Player>)>,
-    ),
+pub fn player_inputs_handling_system(
+    queries: Query<(&mut Player, &mut PlayerMaterialHandle), With<CurrentPlayerMarker>>,
     resources: (
-        Res<Time>,
         Res<ButtonInput<KeyCode>>,
         Res<UIMode>,
         Res<KeyMap>,
         ResMut<Assets<StandardMaterial>>,
         ResMut<ClientWorldMap>,
-        Res<RenderDistance>,
         ResMut<ViewMode>,
         ResMut<DebugOptions>,
-        ResMut<RenetClient>,
+        ResMut<BufferedInputs>,
     ),
-    mut previous_player_chunk: Local<IVec3>,
     mut commands: Commands,
     mut ev_writer: EventWriter<WorldRenderRequestUpdateEvent>,
-    first_chunk_received: ResMut<FirstChunkReceived>,
 ) {
-    let (mut player_query, camera_query) = queries;
+    let mut player_query = queries;
     let (
-        time,
         keyboard_input,
         ui_mode,
         key_map,
         mut materials,
         mut world_map,
-        render_distance,
         mut view_mode,
         mut debug_options,
-        mut client,
+        mut buffer_client,
     ) = resources;
 
     let res = player_query.get_single_mut();
-    // return early if player is not spawned
+    // Return early if the player has not been spawned yet
     if res.is_err() {
         debug!("player not found");
         return;
     }
 
-    let (mut player_transform, mut player, material_handle) = player_query.single_mut();
-
-    let camera_transform = camera_query.single();
+    let (mut player, material_handle) = player_query.single_mut();
 
     if *ui_mode == UIMode::Closed {
         if is_action_just_pressed(GameAction::ToggleViewMode, &keyboard_input, &key_map) {
@@ -83,63 +65,14 @@ pub fn player_movement_system(
         // fly mode (f key)
         if is_action_just_pressed(GameAction::ToggleFlyMode, &keyboard_input, &key_map) {
             player.toggle_fly_mode();
+            buffer_client
+                .buffer
+                .insert(NetworkPlayerInput::ToggleFlyMode);
         }
     }
 
     let force_chunk_reload =
         is_action_just_pressed(GameAction::ReloadChunks, &keyboard_input, &key_map);
-
-    // Render chunks around player
-    let player_chunk = IVec3::new(
-        block_to_chunk_coord(player_transform.translation.x as i32),
-        block_to_chunk_coord(player_transform.translation.y as i32),
-        block_to_chunk_coord(player_transform.translation.z as i32),
-    );
-
-    // If player changed chunks between this frame and the previous
-    if player_chunk != *previous_player_chunk {
-        let r = render_distance.distance as i32;
-        let mut requested_chunks: Vec<IVec3> = Vec::new();
-
-        for x in -r..=r {
-            for z in -r..=r {
-                for y in 0..=8 {
-                    let chunk_pos = IVec3::new(player_chunk.x + x, y, player_chunk.z + z);
-                    let chunk = world_map.map.get(&chunk_pos);
-
-                    if chunk.is_none() {
-                        requested_chunks.push(chunk_pos);
-                    }
-                }
-            }
-        }
-
-        // Only retain chunks in the render radius
-        world_map.map.retain(|pos, chunk| {
-            // If chunk is empty, or not in render radius
-            if !chunk_in_radius(&player_chunk, pos, r) || chunk.map.is_empty() {
-                // Remove chunk, and delete its associated entity if it exists
-                if let Some(entity) = chunk.entity {
-                    commands.entity(entity).despawn_recursive();
-                    chunk.entity = None;
-                }
-                false
-            } else {
-                true
-            }
-        });
-
-        // Send a request to the server for the chunks to load
-        request_world_update(
-            &mut client,
-            requested_chunks,
-            &render_distance,
-            player_chunk,
-        );
-
-        // Update player chunk position
-        *previous_player_chunk = player_chunk;
-    }
 
     // If a re-render has been requested by the player
     if force_chunk_reload {
@@ -168,109 +101,5 @@ pub fn player_movement_system(
                 material.base_color = Color::srgba(1.0, 0.0, 0.0, 1.0);
             }
         }
-    }
-
-    let speed = if player.is_flying { 15.0 } else { 5.0 };
-
-    let jump_velocity = 10.0;
-
-    // flying mode
-    if player.is_flying && *ui_mode == UIMode::Closed {
-        if is_action_pressed(GameAction::FlyUp, &keyboard_input, &key_map) {
-            player_transform.translation.y += speed * 2.0 * time.delta_secs();
-        }
-        if is_action_pressed(GameAction::FlyDown, &keyboard_input, &key_map) {
-            player_transform.translation.y -= speed * 2.0 * time.delta_secs();
-        }
-    }
-
-    // Calculate movement directions relative to the camera
-    let mut forward = camera_transform.forward().xyz();
-    forward.y = 0.0;
-
-    let mut right = camera_transform.right().xyz();
-    right.y = 0.0;
-
-    let mut direction = Vec3::ZERO;
-
-    if *ui_mode == UIMode::Closed {
-        // Adjust direction based on key presses
-        if is_action_pressed(GameAction::MoveBackward, &keyboard_input, &key_map) {
-            direction -= forward;
-        }
-        if is_action_pressed(GameAction::MoveForward, &keyboard_input, &key_map) {
-            direction += forward;
-        }
-        if is_action_pressed(GameAction::MoveLeft, &keyboard_input, &key_map) {
-            direction -= right;
-        }
-        if is_action_pressed(GameAction::MoveRight, &keyboard_input, &key_map) {
-            direction += right;
-        }
-    }
-
-    // Move the player (xy plane only), only if there are no blocks and UI is closed
-    if first_chunk_received.0 && direction.length_squared() > 0.0 {
-        direction = direction.normalize();
-
-        // Déplacement sur l'axe X
-        let new_pos_x = player_transform.translation
-            + Vec3::new(direction.x, 0.0, 0.0) * speed * time.delta_secs();
-
-        if player.is_flying || !check_player_collision(&new_pos_x, &player, world_map.as_ref()) {
-            player_transform.translation.x = new_pos_x.x;
-        }
-
-        // Déplacement sur l'axe Z
-        let new_pos_z = player_transform.translation
-            + Vec3::new(0.0, 0.0, direction.z) * speed * time.delta_secs();
-
-        if player.is_flying || !check_player_collision(&new_pos_z, &player, world_map.as_ref()) {
-            player_transform.translation.z = new_pos_z.z;
-        }
-    }
-
-    // Handle jumping (if on the ground) and gravity, only if not flying
-    if !player.is_flying {
-        if player.on_ground && is_action_pressed(GameAction::Jump, &keyboard_input, &key_map) {
-            // Player can jump only when grounded
-            player.vertical_velocity = jump_velocity;
-            player.on_ground = false;
-        } else if !player.on_ground {
-            // Apply gravity when the player is in the air
-            player.vertical_velocity += GRAVITY * time.delta_secs();
-        }
-    }
-
-    // apply gravity and verify vertical collisions
-    let mut new_y = player_transform.translation.y;
-    if first_chunk_received.0 {
-        new_y = player_transform.translation.y + player.vertical_velocity * time.delta_secs();
-    }
-
-    // Vérifier uniquement les collisions verticales (sol et plafond)
-    if check_player_collision(
-        &Vec3::new(
-            player_transform.translation.x,
-            new_y,
-            player_transform.translation.z,
-        ),
-        &player,
-        world_map.as_ref(),
-    ) {
-        // Si un bloc est détecté sous le joueur, il reste sur le bloc
-        player.on_ground = true;
-        player.vertical_velocity = 0.0; // Réinitialiser la vélocité verticale si le joueur est au sol
-    } else {
-        // Si aucun bloc n'est détecté sous le joueur, il continue de tomber
-        player_transform.translation.y = new_y;
-        player.on_ground = false;
-    }
-
-    // If the player is below the world, reset their position
-    const FALL_LIMIT: f32 = -50.0;
-    if player_transform.translation.y < FALL_LIMIT {
-        player_transform.translation = Vec3::new(0.0, 100.0, 0.0);
-        player.vertical_velocity = 0.0;
     }
 }

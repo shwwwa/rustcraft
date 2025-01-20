@@ -10,17 +10,15 @@ use shared::{get_shared_renet_config, GameServerConfig};
 
 use crate::menus::solo::SelectedWorld;
 use crate::network::world::update_world_from_network;
-use crate::network::{update_cached_chat_state, CachedChatConversation};
+use crate::network::CachedChatConversation;
 use crate::player::CurrentPlayerMarker;
 use crate::world::render_distance::RenderDistance;
 use crate::world::time::ClientTime;
 use crate::world::WorldRenderRequestUpdateEvent;
 use crate::PlayerNameSupplied;
-use bevy_renet::renet::DefaultChannel;
-use bincode::Options;
 use shared::messages::{
-    AuthRegisterRequest, ChatConversation, ClientToServerMessage, ItemStackUpdateEvent, PlayerId,
-    PlayerSpawnEvent,
+    AuthRegisterRequest, ItemStackUpdateEvent, PlayerId, PlayerSpawnEvent, PlayerUpdateEvent,
+    ServerToClientMessage,
 };
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
@@ -140,51 +138,25 @@ pub fn launch_local_server_system(
     }
 }
 
-fn poll_reliable_ordered_messages(
-    client: &mut ResMut<RenetClient>,
-    chat_state: &mut ResMut<CachedChatConversation>,
-) {
-    while let Some(message) = client.receive_message(DefaultChannel::ReliableOrdered) {
-        let message = bincode::options().deserialize::<ChatConversation>(&message);
-        match message {
-            Ok(data) => {
-                update_cached_chat_state(chat_state, data);
-            }
-            Err(e) => error!("err {}", e),
-        };
-    }
-}
-
-fn poll_reliable_unordered_messages(
-    client: &mut ResMut<RenetClient>,
-    world: &mut ResMut<ClientWorldMap>,
-    client_time: ResMut<ClientTime>,
-    ev_render: &mut EventWriter<WorldRenderRequestUpdateEvent>,
-    players: &mut Query<(&mut Transform, &Player), With<Player>>,
-    current_player_entity: Query<Entity, With<CurrentPlayerMarker>>,
-    render_distance: Res<RenderDistance>,
-    ev_player_spawn: &mut EventWriter<PlayerSpawnEvent>,
-    ev_mob_update: &mut EventWriter<MobUpdateEvent>,
-    ev_item_stacks_update: &mut EventWriter<ItemStackUpdateEvent>,
-) {
-    update_world_from_network(
-        client,
-        world,
-        client_time,
-        ev_render,
-        players,
-        current_player_entity,
-        render_distance,
-        ev_player_spawn,
-        ev_mob_update,
-        ev_item_stacks_update,
-    );
-}
+// fn poll_reliable_ordered_messages(
+//     _client: &mut ResMut<RenetClient>,
+//     _chat_state: &mut ResMut<CachedChatConversation>,
+// ) {
+// while let Some(message) = client.receive_game_message(DefaultChannel::ReliableOrdered) {
+//     let message = bincode::options().deserialize::<ChatConversation>(&message);
+//     match message {
+//         Ok(data) => {
+//             update_cached_chat_state(chat_state, data);
+//         }
+//         Err(e) => error!("err {}", e),
+//     };
+// }
+// }
 
 pub fn poll_network_messages(
     mut client: ResMut<RenetClient>,
-    mut chat_state: ResMut<CachedChatConversation>,
-    client_time: ResMut<ClientTime>,
+    // mut chat_state: ResMut<CachedChatConversation>,
+    // client_time: ResMut<ClientTime>,
     mut world: ResMut<ClientWorldMap>,
     mut ev_render: EventWriter<WorldRenderRequestUpdateEvent>,
     mut players: Query<(&mut Transform, &Player), With<Player>>,
@@ -193,12 +165,13 @@ pub fn poll_network_messages(
     mut ev_player_spawn: EventWriter<PlayerSpawnEvent>,
     mut ev_mob_update: EventWriter<MobUpdateEvent>,
     mut ev_item_stacks_update: EventWriter<ItemStackUpdateEvent>,
+    mut ev_player_update: EventWriter<PlayerUpdateEvent>,
 ) {
-    poll_reliable_ordered_messages(&mut client, &mut chat_state);
-    poll_reliable_unordered_messages(
+    // poll_reliable_ordered_messages(&mut client, &mut chat_state);
+    update_world_from_network(
         &mut client,
         &mut world,
-        client_time,
+        // client_time,
         &mut ev_render,
         &mut players,
         current_player_entity,
@@ -206,6 +179,7 @@ pub fn poll_network_messages(
         &mut ev_player_spawn,
         &mut ev_mob_update,
         &mut ev_item_stacks_update,
+        &mut ev_player_update,
     );
 }
 
@@ -261,6 +235,7 @@ pub fn establish_authenticated_connection_to_server(
     mut target: ResMut<TargetServer>,
     current_profile: Res<CurrentPlayerProfile>,
     mut ev_spawn: EventWriter<PlayerSpawnEvent>,
+    mut client_time: ResMut<ClientTime>,
 ) {
     if target.session_token.is_some() {
         info!(
@@ -277,22 +252,31 @@ pub fn establish_authenticated_connection_to_server(
 
         let username = target.username.as_ref().unwrap();
 
-        let auth_msg = ClientToServerMessage::AuthRegisterRequest(AuthRegisterRequest {
+        let auth_msg = AuthRegisterRequest {
             username: username.clone(),
-        });
-        client.send_game_message(auth_msg);
+        };
+        info!("Sending auth request: {:?}", auth_msg);
+        client.send_game_message(auth_msg.into());
         target.state = TargetServerState::Establishing;
     }
 
-    while let Some(message) = client.receive_message(DefaultChannel::ReliableOrdered) {
-        let message =
-            bincode::options().deserialize::<shared::messages::AuthRegisterResponse>(&message);
-        if let Ok(message) = message {
-            target.username = Some(message.username);
-            target.session_token = Some(message.session_token);
-            target.state = TargetServerState::ConnectionEstablished;
-            ev_spawn.send(message.spawn_event);
-            info!("Connected! {:?}", target);
+    while let Ok(message) = client.receive_game_message() {
+        match message {
+            ServerToClientMessage::AuthRegisterResponse(message) => {
+                target.username = Some(message.username);
+                target.session_token = Some(message.session_token);
+                target.state = TargetServerState::ConnectionEstablished;
+                client_time.0 = message.tick;
+                // TODO: handle clock sync using the timestamp_ms field
+                // it will become very important if the lantency is high
+                for player in message.players {
+                    ev_spawn.send(player);
+                }
+                info!("Connected! {:?}", target);
+            }
+            _ => {
+                warn!("Unexpected message: {:?}", message);
+            }
         }
     }
 }

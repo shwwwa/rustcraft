@@ -1,13 +1,12 @@
 use crate::messages::PlayerId;
+use crate::players::Player;
 use crate::world::block_to_chunk_coord;
 use crate::world::global_block_to_chunk_pos;
 use crate::world::to_local_pos;
 use crate::world::BlockId;
 use crate::CHUNK_SIZE;
 use bevy::math::bounding::Aabb3d;
-use bevy::math::IVec3;
-use bevy::math::Vec3;
-use bevy::prelude::Resource;
+use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fmt::Debug;
@@ -41,7 +40,7 @@ pub struct ServerWorldMap {
     pub name: String,
     pub map: HashMap<IVec3, ServerChunk>,
     pub chunks_to_update: Vec<IVec3>,
-    pub player_positions: HashMap<PlayerId, Vec3>,
+    pub players: HashMap<PlayerId, Player>,
     pub mobs: Vec<ServerMob>,
     pub item_stacks: Vec<ServerItemStack>,
     pub time: u64,
@@ -155,7 +154,10 @@ impl WorldMap for ServerWorldMap {
                 let sub_z: i32 = ((z % CHUNK_SIZE) + CHUNK_SIZE) % CHUNK_SIZE;
                 chunk.map.get(&IVec3::new(sub_x, sub_y, sub_z))
             }
-            None => None,
+            None => {
+                warn!("Chunk not found for block at {:?}", position);
+                None
+            }
         }
     }
 
@@ -198,9 +200,9 @@ impl WorldMap for ServerWorldMap {
 
     fn check_collision_box(&self, hitbox: &Aabb3d) -> bool {
         // Check all blocks inside the hitbox
-        for x in (hitbox.min.x.round() as i32)..(hitbox.max.x.round() as i32) {
-            for y in (hitbox.min.y.round() as i32)..(hitbox.max.y.round() as i32) {
-                for z in (hitbox.min.z.round() as i32)..(hitbox.max.z.round() as i32) {
+        for x in (hitbox.min.x.round() as i32)..=(hitbox.max.x.round() as i32) {
+            for y in (hitbox.min.y.round() as i32)..=(hitbox.max.y.round() as i32) {
+                for z in (hitbox.min.z.round() as i32)..=(hitbox.max.z.round() as i32) {
                     if let Some(block) = self.get_block_by_coordinates(&IVec3::new(x, y, z)) {
                         if block.id.has_hitbox() {
                             return true;

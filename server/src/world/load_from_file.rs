@@ -36,12 +36,13 @@ pub fn load_world_data(
             "World data file not found: {}. Generating default world and seed.",
             file_path.display()
         );
+        let seed = WorldSeed(rand::random::<u32>());
         return Ok(WorldData {
             map: ServerWorldMap {
                 name: file_name.to_string(),
                 ..Default::default()
             },
-            seed: WorldSeed(rand::random::<u32>()),
+            seed,
             time: 0,
         });
     }

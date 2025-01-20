@@ -1,11 +1,15 @@
 use std::time::Duration;
 
-use bevy::{math::Vec3, prelude::Resource};
+use bevy::prelude::Resource;
 use bevy_renet::renet::{ChannelConfig, ConnectionConfig, SendType};
+use bincode::Options;
 
+pub mod constants;
 pub mod messages;
 pub mod players;
 pub mod world;
+
+pub use constants::*;
 
 #[derive(Resource, Debug, Clone)]
 pub struct GameFolderPaths {
@@ -23,15 +27,6 @@ pub struct GameServerConfig {
     pub world_name: String,
     pub is_solo: bool,
 }
-
-pub const MAX_INVENTORY_SLOTS: u32 = 4 * 9;
-pub const PROTOCOL_ID: u64 = 0;
-pub const CHUNK_SIZE: i32 = 16;
-pub const HALF_BLOCK: Vec3 = Vec3 {
-    x: 0.5,
-    y: 0.5,
-    z: 0.5,
-};
 
 fn get_customized_default_channels() -> Vec<ChannelConfig> {
     let memory = 128 * 1024 * 1024;
@@ -64,4 +59,19 @@ pub fn get_shared_renet_config() -> ConnectionConfig {
         server_channels_config: get_customized_default_channels(),
         ..Default::default()
     }
+}
+
+pub fn game_message_to_payload<T: serde::Serialize>(message: T) -> Vec<u8> {
+    bincode::options().serialize(&message).unwrap()
+    // let payload = bincode::options().serialize(&message).unwrap();
+    // payload
+    // lz4::block::compress(&payload, None, false).unwrap()
+}
+
+pub fn payload_to_game_message<T: serde::de::DeserializeOwned>(
+    payload: &[u8],
+) -> Result<T, bincode::Error> {
+    // let decompressed_payload = lz4::block::decompress(payload, None).unwrap();
+    // bincode::options().deserialize(&decompressed_payload)
+    bincode::options().deserialize(payload)
 }

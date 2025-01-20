@@ -1,32 +1,26 @@
-use crate::init::{ServerLobby, ServerTime, TICKS_PER_SECOND};
+use crate::init::{ServerLobby, ServerTime};
 use crate::network::broadcast_chat::*;
-use crate::network::broadcast_world::WorldUpdateRequestEvent;
 use crate::network::broadcast_world::*;
 use crate::world;
 use crate::world::save::SaveRequestEvent;
 use crate::world::BlockInteractionEvent;
 use bevy::prelude::*;
-use bevy_renet::renet::{DefaultChannel, RenetServer, ServerEvent};
-use bincode::Options;
+use bevy_renet::renet::{RenetServer, ServerEvent};
 use shared::messages::{
     AuthRegisterResponse, ChatConversation, ClientToServerMessage, FullChatMessage,
     PlayerSpawnEvent, ServerToClientMessage,
 };
+use shared::players::Player;
 use shared::world::ServerWorldMap;
-use shared::GameServerConfig;
+use shared::{GameServerConfig, TICKS_PER_SECOND};
 
-#[derive(Resource)]
-pub struct BroadcastTimer {
-    pub timer: Timer,
-}
+use super::extensions::SendGameMessageExtension;
+use super::simulation::{handle_player_inputs_system, PlayerInputsEvent};
 
 pub fn setup_resources_and_events(app: &mut App) {
-    app.insert_resource(BroadcastTimer {
-        timer: Timer::from_seconds(2.0, TimerMode::Repeating),
-    })
-    .add_event::<WorldUpdateRequestEvent>()
-    .add_event::<SaveRequestEvent>()
-    .add_event::<BlockInteractionEvent>();
+    app.add_event::<SaveRequestEvent>()
+        .add_event::<BlockInteractionEvent>()
+        .add_event::<PlayerInputsEvent>();
 
     setup_chat_resources(app);
 }
@@ -34,14 +28,14 @@ pub fn setup_resources_and_events(app: &mut App) {
 pub fn register_systems(app: &mut App) {
     app.add_systems(Update, server_update_system);
 
-    app.add_systems(Update, broadcast_chat_messages);
-
-    app.add_systems(Update, (broadcast_world_state, send_world_update));
+    app.add_systems(Update, broadcast_world_state);
 
     app.add_systems(Update, world::save::save_world_system);
     app.add_systems(Update, world::handle_block_interactions);
 
     app.add_systems(Update, crate::mob::manage_mob_spawning_system);
+
+    app.add_systems(Update, handle_player_inputs_system);
 
     app.add_systems(PostUpdate, update_server_time);
 }
@@ -56,18 +50,21 @@ fn server_update_system(
     (
         mut ev_chat,
         mut ev_app_exit,
-        mut ev_world_update_request,
+        // mut ev_world_update_request,
         mut ev_save_request,
         mut ev_block_interaction,
+        mut ev_player_inputs,
     ): (
         EventWriter<ChatMessageEvent>,
         EventWriter<AppExit>,
-        EventWriter<WorldUpdateRequestEvent>,
+        // EventWriter<WorldUpdateRequestEvent>,
         EventWriter<SaveRequestEvent>,
         EventWriter<BlockInteractionEvent>,
+        EventWriter<PlayerInputsEvent>,
     ),
     config: Res<GameServerConfig>,
     mut world_map: ResMut<ServerWorldMap>,
+    time: Res<ServerTime>,
 ) {
     for event in server_events.read() {
         debug!("event received");
@@ -82,18 +79,8 @@ fn server_update_system(
     }
 
     for client_id in server.clients_id() {
-        while let Some(message) = server.receive_message(client_id, DefaultChannel::ReliableOrdered)
-        {
-            let msg = bincode::options().deserialize::<ClientToServerMessage>(&message);
-            let msg = match msg {
-                Ok(msg) => msg,
-                Err(e) => {
-                    error!("Failed to parse incoming message: {}", e);
-                    continue;
-                }
-            };
-
-            match msg {
+        while let Ok(message) = server.receive_game_message(client_id) {
+            match message {
                 ClientToServerMessage::AuthRegisterRequest(auth_req) => {
                     info!("Auth request received {:?}", auth_req);
 
@@ -105,25 +92,38 @@ fn server_update_system(
                     lobby.players.insert(client_id, auth_req.username.clone());
                     debug!("New lobby : {:?}", lobby);
 
-                    let spawn_message = PlayerSpawnEvent {
-                        id: client_id,
-                        name: auth_req.username,
-                        position: Vec3::new(0.0, 80.0, 0.0),
-                    };
+                    let new_position = Vec3::new(0.0, 80.0, 0.0);
+
+                    let player_data =
+                        Player::new(client_id, auth_req.username.clone(), new_position);
+
+                    world_map.players.insert(client_id, player_data);
+
+                    let timestamp_ms: u64 = std::time::SystemTime::now()
+                        .duration_since(std::time::UNIX_EPOCH)
+                        .unwrap()
+                        .as_millis() as u64;
+
+                    let all_player_spawn_events = world_map
+                        .players
+                        .iter()
+                        .map(|(id, player)| PlayerSpawnEvent {
+                            id: *id,
+                            name: player.name.clone(),
+                            position: player.position,
+                        })
+                        .collect();
 
                     // TODO: add cleanup system if no heartbeat
-                    let msg = &(AuthRegisterResponse {
-                        username: spawn_message.name.clone(),
+                    let auth_res = AuthRegisterResponse {
+                        username: auth_req.username,
                         session_token: client_id as u128,
-                        spawn_event: spawn_message.clone(),
-                    });
-                    let auth_response_payload = bincode::options().serialize(msg).unwrap();
+                        tick: time.0,
+                        timestamp_ms,
+                        players: all_player_spawn_events,
+                    };
 
-                    server.send_message(
-                        client_id,
-                        DefaultChannel::ReliableOrdered,
-                        auth_response_payload,
-                    );
+                    server.send_game_message(client_id, auth_res.into());
 
                     for (id, name) in lobby.players.iter() {
                         let spawn_message = PlayerSpawnEvent {
@@ -133,14 +133,10 @@ fn server_update_system(
                         };
 
                         let spawn_message_wrapped =
-                            &ServerToClientMessage::PlayerSpawn(spawn_message);
+                            ServerToClientMessage::PlayerSpawn(spawn_message);
 
-                        let spawn_payload = bincode::options()
-                            .serialize(&spawn_message_wrapped.clone())
-                            .unwrap();
-
-                        server.broadcast_message(DefaultChannel::ReliableUnordered, spawn_payload);
                         info!("Sending spawn order {:?}", spawn_message_wrapped);
+                        server.broadcast_game_message(spawn_message_wrapped);
                     }
                 }
                 ClientToServerMessage::ChatMessage(chat_msg) => {
@@ -171,32 +167,14 @@ fn server_update_system(
                         info!("Player {:?} disconnected", client_id);
                     }
                 }
-                ClientToServerMessage::PlayerInputs(_inputs) => {
-                    // debug!("Not implemented yet: {:?}", inputs);
+                ClientToServerMessage::PlayerInputs(inputs) => {
+                    // debug!("Received player inputs: {:?} for {:?}", inputs, client_id);
+                    ev_player_inputs.send(PlayerInputsEvent { client_id, inputs });
                 }
                 ClientToServerMessage::SaveWorldRequest => {
                     debug!("Save request received from client with session token");
 
                     ev_save_request.send(SaveRequestEvent);
-                }
-                ClientToServerMessage::WorldUpdateRequest {
-                    player_chunk_position,
-                    requested_chunks,
-                    render_distance,
-                } => {
-                    debug!(
-                        "Received WorldUpdateRequest: client_id = {}, player_chunk_position = {:?}, render_distance = {}, requested_chunks = {}",
-                        client_id,
-                        player_chunk_position,
-                        render_distance,
-                        requested_chunks.len(),
-                    );
-                    ev_world_update_request.send(WorldUpdateRequestEvent {
-                        render_distance,
-                        client: client_id,
-                        chunks: requested_chunks,
-                        player_chunk_position,
-                    });
                 }
                 ClientToServerMessage::BlockInteraction {
                     position,
@@ -211,9 +189,6 @@ fn server_update_system(
                         position,
                         block_type,
                     });
-                }
-                ClientToServerMessage::SetPlayerPosition { position } => {
-                    world_map.player_positions.insert(client_id, position);
                 }
             }
         }

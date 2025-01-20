@@ -5,7 +5,10 @@ use crate::{
 };
 use bevy::color::palettes::css::ORANGE;
 use bevy::prelude::*;
-use shared::{messages::PlayerSpawnEvent, players::Player};
+use shared::{
+    messages::{PlayerSpawnEvent, PlayerUpdateEvent},
+    players::Player,
+};
 
 #[derive(Component)]
 pub struct CurrentPlayerMarker {}
@@ -51,7 +54,7 @@ pub fn spawn_players_system(
             }
         }
         let is_current_player = event.id == current_id;
-        let player = Player::new(event.id, event.name.clone());
+        let player = Player::new(event.id, event.name.clone(), spawn_coords);
 
         let color = if is_current_player {
             Color::srgba(1.0, 0.0, 0.0, 1.0)
@@ -117,5 +120,18 @@ pub fn spawn_players_system(
                     TextLayout::default().with_no_wrap(),
                 ));
             });
+    }
+}
+
+pub fn update_players_system(
+    mut players: Query<(&Player, &mut Transform), With<Player>>,
+    mut ev_player_update: EventReader<PlayerUpdateEvent>,
+) {
+    for event in ev_player_update.read() {
+        for (player, mut transform) in players.iter_mut() {
+            if player.id == event.id {
+                transform.translation = event.position;
+            }
+        }
     }
 }

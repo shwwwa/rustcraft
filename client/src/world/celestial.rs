@@ -3,7 +3,7 @@ use crate::world::materials::MaterialResource;
 use crate::world::time::ClientTime;
 use crate::GameState;
 use crate::{
-    constants::{CELESTIAL_DISTANCE, CELESTIAL_SIZE, DAY_DURATION},
+    constants::{CELESTIAL_DISTANCE, CELESTIAL_SIZE, DAY_DURATION_IN_TICKS},
     world::GlobalMaterial,
 };
 use bevy::{
@@ -23,12 +23,6 @@ pub struct SunLight;
 // Secondary main light source : the moon
 #[derive(Component)]
 pub struct MoonLight;
-
-#[derive(Debug, Default)]
-pub struct DayCycle {
-    local_time: f32,
-    last_sync: f32,
-}
 
 pub fn setup_main_lighting(
     mut commands: Commands,
@@ -126,21 +120,10 @@ pub fn setup_main_lighting(
 
 pub fn update_celestial_bodies(
     mut query: Query<&mut Transform, With<CelestialRoot>>,
-    time: Res<Time>,
-    client_time: Res<ClientTime>,
-    mut times: Local<DayCycle>,
+    time: Res<ClientTime>,
 ) {
-    // Update local time with delta_secs
-    times.local_time += time.delta_secs();
-
-    // Synchronize with the server time every second
-    if times.local_time - times.last_sync >= 1.0 {
-        times.local_time = client_time.0 as f32; // Reset local time based on the server
-        times.last_sync = times.local_time;
-    }
-
     // Calculate the angle for the rotation (normalization between 0 and 1)
-    let normalized_time = (times.local_time % DAY_DURATION) / DAY_DURATION;
+    let normalized_time = (time.0 % DAY_DURATION_IN_TICKS) as f32 / DAY_DURATION_IN_TICKS as f32;
     let angle = normalized_time * 2.0 * PI;
 
     // Apply the rotation to celestial bodies

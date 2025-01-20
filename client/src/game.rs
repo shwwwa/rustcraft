@@ -2,13 +2,16 @@ use std::collections::HashMap;
 
 use crate::entities::stack::stack_update_system;
 use crate::mob::*;
+use crate::network::buffered_client::BufferedInputs;
 use crate::ui::hud::chat::{render_chat, setup_chat};
 use crate::ui::menus::{setup_server_connect_loading_screen, update_server_connect_loading_screen};
 use bevy::prelude::*;
 use bevy_atmosphere::prelude::*;
 use shared::messages::mob::MobUpdateEvent;
-use shared::messages::{ItemStackUpdateEvent, PlayerSpawnEvent};
+use shared::messages::{ItemStackUpdateEvent, PlayerSpawnEvent, PlayerUpdateEvent};
 use shared::players::Inventory;
+use shared::TICKS_PER_SECOND;
+use time::time_update_system;
 
 use crate::world::time::ClientTime;
 use crate::world::ClientWorldMap;
@@ -38,8 +41,8 @@ use shared::world::{BlockId, ItemId, WorldSeed};
 use crate::network::{
     establish_authenticated_connection_to_server, init_server_connection,
     launch_local_server_system, network_failure_handler, poll_network_messages,
-    send_player_position_to_server, terminate_server_connection, upload_player_inputs_system,
-    CurrentPlayerProfile, TargetServer, TargetServerState,
+    terminate_server_connection, upload_player_inputs_system, CurrentPlayerProfile, TargetServer,
+    TargetServerState,
 };
 
 use crate::GameState;
@@ -49,8 +52,6 @@ pub struct PreLoadingCompletion {
     pub textures_loaded: bool,
 }
 
-// This plugin will contain the game. In this case, it's just be a screen that will
-// display the current settings for 5 seconds before returning to the menu
 pub fn game_plugin(app: &mut App) {
     app.add_plugins(FrameTimeDiagnosticsPlugin)
         .add_plugins(WireframePlugin)
@@ -89,9 +90,11 @@ pub fn game_plugin(app: &mut App) {
         .init_resource::<FoxFeetTargets>()
         .init_resource::<Animations>()
         .init_resource::<TargetedMob>()
-        .insert_resource(Time::<Fixed>::from_hz(20.0))
+        .init_resource::<BufferedInputs>()
+        .insert_resource(Time::<Fixed>::from_hz(TICKS_PER_SECOND as f64))
         .add_event::<WorldRenderRequestUpdateEvent>()
         .add_event::<PlayerSpawnEvent>()
+        .add_event::<PlayerUpdateEvent>()
         .add_event::<MobUpdateEvent>()
         .add_event::<ItemStackUpdateEvent>()
         .add_systems(
@@ -146,7 +149,7 @@ pub fn game_plugin(app: &mut App) {
             Update,
             (
                 render_distance_update_system,
-                player_movement_system,
+                player_inputs_handling_system,
                 (handle_block_interactions, camera_control_system).chain(),
                 fps_text_update_system,
                 coords_text_update_system,
@@ -182,17 +185,24 @@ pub fn game_plugin(app: &mut App) {
             Update,
             (
                 network_failure_handler,
-                upload_player_inputs_system,
-                send_player_position_to_server,
                 spawn_players_system,
+                update_players_system,
                 spawn_mobs_system,
                 player_labels_system,
             )
                 .run_if(in_state(GameState::Game)),
         )
         .add_systems(
-            FixedUpdate,
+            FixedPreUpdate,
             poll_network_messages.run_if(in_state(GameState::Game)),
+        )
+        .add_systems(
+            Update,
+            upload_player_inputs_system.run_if(in_state(GameState::Game)),
+        )
+        .add_systems(
+            FixedPostUpdate,
+            time_update_system.run_if(in_state(GameState::Game)),
         )
         .add_systems(
             OnExit(GameState::Game),

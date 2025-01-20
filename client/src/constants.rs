@@ -1,5 +1,4 @@
 pub const CUBE_SIZE: f32 = 1.0;
-pub const GRAVITY: f32 = -9.8 * 4.0;
 
 pub const INTERACTION_DISTANCE: f32 = 7.;
 pub const BASE_ROUGHNESS: f32 = 0.6;
@@ -10,7 +9,7 @@ pub const DEFAULT_CHUNK_RENDER_DISTANCE_RADIUS: u32 = if cfg!(debug_assertions) 
 
 pub const CELESTIAL_SIZE: f32 = 10.;
 pub const CELESTIAL_DISTANCE: f32 = 50.; // Low value for testing ; will be increased later
-pub const DAY_DURATION: f32 = 60.;
+pub const DAY_DURATION_IN_TICKS: u64 = 20 * 60; // 20 ticks per second * 60 seconds = 1 minute
 
 pub const MAX_HOTBAR_SLOTS: u32 = 9;
 

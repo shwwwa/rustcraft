@@ -31,6 +31,14 @@ pub fn block_vec3_to_chunk_v3_coord(v: Vec3) -> Vec3 {
     )
 }
 
+pub fn world_position_to_chunk_position(v: Vec3) -> IVec3 {
+    IVec3::new(
+        block_to_chunk_coord(v.x as i32),
+        block_to_chunk_coord(v.y as i32),
+        block_to_chunk_coord(v.z as i32),
+    )
+}
+
 pub fn to_global_pos(chunk_pos: &IVec3, local_block_pos: &IVec3) -> IVec3 {
     *chunk_pos * CHUNK_SIZE + *local_block_pos
 }

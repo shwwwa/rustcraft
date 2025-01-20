@@ -6,7 +6,7 @@ mod world;
 
 use crate::world::BlockData;
 pub use auth::*;
-use bevy::math::{IVec3, Vec3};
+use bevy::math::IVec3;
 pub use chat::*;
 use mob::MobUpdateEvent;
 pub use player::*;
@@ -21,19 +21,10 @@ pub enum ClientToServerMessage {
     ChatMessage(ChatMessageRequest),
     Exit,
     PlayerInputs(PlayerInputs),
-    WorldUpdateRequest {
-        player_chunk_position: IVec3,
-        render_distance: u32,
-        requested_chunks: Vec<IVec3>,
-    },
     SaveWorldRequest,
     BlockInteraction {
         position: IVec3,
         block_type: Option<BlockData>,
-    },
-    SetPlayerPosition {
-        // should be deprecated in the long run
-        position: Vec3,
     },
 }
 
@@ -44,4 +35,5 @@ pub enum ServerToClientMessage {
     WorldUpdate(WorldUpdate),
     PlayerSpawn(PlayerSpawnEvent),
     MobUpdate(MobUpdateEvent),
+    PlayerUpdate(PlayerUpdateEvent),
 }

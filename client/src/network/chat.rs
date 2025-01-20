@@ -3,11 +3,11 @@ use shared::messages::ChatConversation;
 
 #[derive(Resource, Default, Debug)]
 pub struct CachedChatConversation {
-    pub last_update: u64,
+    pub _last_update: u64,
     pub data: Option<ChatConversation>,
 }
 
-pub fn update_cached_chat_state(
+pub fn _update_cached_chat_state(
     chat_state: &mut ResMut<CachedChatConversation>,
     new_state: ChatConversation,
 ) {
@@ -16,7 +16,7 @@ pub fn update_cached_chat_state(
         .unwrap()
         .as_millis() as u64;
 
-    chat_state.last_update = now;
+    chat_state._last_update = now;
     chat_state.data = Some(new_state);
 
     trace!("new CachedChatConversation: {:?}", &chat_state);

@@ -1,7 +1,9 @@
 use bevy::{
-    prelude::{Component, Resource},
+    math::Vec3,
+    prelude::{Component, Resource, Transform},
     utils::HashMap,
 };
+use serde::{Deserialize, Serialize};
 
 use crate::{
     messages::PlayerId,
@@ -120,14 +122,14 @@ impl Inventory {
     }
 }
 
-#[derive(Component, Clone)]
+#[derive(Component, Clone, Serialize, Deserialize, Debug)]
 pub struct Player {
     pub id: PlayerId,
     pub name: String,
-    pub vertical_velocity: f32,
+    pub position: Vec3,
+    pub camera_transform: Transform,
+    pub velocity: Vec3,
     pub on_ground: bool,
-    // pub view_mode: ViewMode,
-    // pub is_chunk_debug_mode_enabled: bool,
     pub is_flying: bool,
     // pub inventory: HashMap<RegistryId, items::Item>,
     pub height: f32,
@@ -135,11 +137,13 @@ pub struct Player {
 }
 
 impl Player {
-    pub fn new(id: PlayerId, name: String) -> Self {
+    pub fn new(id: PlayerId, name: String, position: Vec3) -> Self {
         Self {
             id,
             name,
-            vertical_velocity: 0.0,
+            position,
+            camera_transform: Transform::default(),
+            velocity: Vec3::ZERO,
             on_ground: true,
             is_flying: false,
             height: 1.8,
@@ -149,6 +153,6 @@ impl Player {
 
     pub fn toggle_fly_mode(&mut self) {
         self.is_flying = !self.is_flying;
-        self.vertical_velocity = 0.0; // Réinitialisation de la vélocité
+        self.velocity = Vec3::ZERO;
     }
 }

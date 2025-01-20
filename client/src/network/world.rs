@@ -1,10 +1,9 @@
 use crate::{player::CurrentPlayerMarker, world::ClientChunk};
 use bevy::prelude::*;
-use bevy_renet::renet::{DefaultChannel, RenetClient};
-use bincode::Options;
+use bevy_renet::renet::RenetClient;
 use shared::{
     messages::{
-        mob::MobUpdateEvent, ClientToServerMessage, ItemStackUpdateEvent, PlayerSpawnEvent,
+        mob::MobUpdateEvent, ItemStackUpdateEvent, PlayerSpawnEvent, PlayerUpdateEvent,
         ServerToClientMessage,
     },
     players::Player,
@@ -13,7 +12,6 @@ use shared::{
 
 use crate::world::ClientWorldMap;
 
-use crate::world::time::ClientTime;
 use crate::world::RenderDistance;
 use crate::world::WorldRenderRequestUpdateEvent;
 
@@ -22,7 +20,7 @@ use super::SendGameMessageExtension;
 pub fn update_world_from_network(
     client: &mut ResMut<RenetClient>,
     world: &mut ResMut<ClientWorldMap>,
-    mut client_time: ResMut<ClientTime>,
+    // mut client_time: ResMut<ClientTime>,
     ev_render: &mut EventWriter<WorldRenderRequestUpdateEvent>,
     players: &mut Query<(&mut Transform, &Player), With<Player>>,
     current_player_entity: Query<Entity, With<CurrentPlayerMarker>>,
@@ -30,6 +28,7 @@ pub fn update_world_from_network(
     ev_player_spawn: &mut EventWriter<PlayerSpawnEvent>,
     ev_mob_update: &mut EventWriter<MobUpdateEvent>,
     ev_item_stacks_update: &mut EventWriter<ItemStackUpdateEvent>,
+    ev_player_update: &mut EventWriter<PlayerUpdateEvent>,
 ) {
     let (player_pos, current_player) = players.get(current_player_entity.single()).unwrap();
     let current_player_id = current_player.id;
@@ -41,19 +40,16 @@ pub fn update_world_from_network(
     );
     let r = render_distance.distance as i32;
 
-    while let Some(bytes) = client.receive_message(DefaultChannel::ReliableUnordered) {
-        let msg = bincode::options()
-            .deserialize::<ServerToClientMessage>(&bytes)
-            .unwrap();
-
+    while let Ok(msg) = client.receive_game_message() {
+        // truncate the message to 1000 characters
+        let debug_msg = format!("{:?}", msg).chars().take(1000).collect::<String>();
+        info!("Received message: {}", debug_msg);
         match msg {
             ServerToClientMessage::WorldUpdate(world_update) => {
                 debug!(
                     "Received world update, {} chunks received",
                     world_update.new_map.len()
                 );
-
-                trace!("Chunks positions : {:?}", world_update.new_map.keys());
 
                 for (pos, chunk) in world_update.new_map {
                     // If the chunk is not in render distance range or is empty, do not consider it
@@ -72,7 +68,7 @@ pub fn update_world_from_network(
                         },
                     };
 
-                    world.map.insert(pos, chunk);
+                    world.map.insert(pos, chunk.clone());
                     ev_render.send(WorldRenderRequestUpdateEvent::ChunkToReload(pos));
                 }
 
@@ -99,7 +95,7 @@ pub fn update_world_from_network(
                 ev_item_stacks_update.send_batch(world_update.item_stacks);
 
                 // get current time
-                client_time.0 = world_update.time;
+                // client_time.0 = world_update.time;
             }
             ServerToClientMessage::PlayerSpawn(spawn_event) => {
                 info!("Received SINGLE spawn event {:?}", spawn_event);
@@ -109,20 +105,11 @@ pub fn update_world_from_network(
                 info!("Received mob update event {:?}", update_event);
                 // this is not currently used
             }
-            _ => {}
+            ServerToClientMessage::PlayerUpdate(update) => {
+                ev_player_update.send(update);
+            }
+            ServerToClientMessage::AuthRegisterResponse(_) => {}
+            ServerToClientMessage::ChatConversation(_) => {}
         }
     }
-}
-
-pub fn request_world_update(
-    client: &mut ResMut<RenetClient>,
-    requested_chunks: Vec<IVec3>,
-    render_distance: &RenderDistance,
-    player_chunk_pos: IVec3,
-) {
-    client.send_game_message(ClientToServerMessage::WorldUpdateRequest {
-        player_chunk_position: player_chunk_pos,
-        requested_chunks,
-        render_distance: render_distance.distance,
-    });
 }
