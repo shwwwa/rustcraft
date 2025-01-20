@@ -17,6 +17,7 @@ pub enum GlobalMaterial {
     Sun,
     Moon,
     Blocks,
+    Items,
 }
 
 #[derive(Clone, Default, Serialize, Deserialize, Debug)]

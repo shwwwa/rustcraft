@@ -7,7 +7,8 @@ use bevy_renet::renet::{DefaultChannel, RenetClient};
 use bincode::Options;
 use shared::{
     messages::{
-        mob::MobUpdateEvent, ClientToServerMessage, PlayerSpawnEvent, ServerToClientMessage,
+        mob::MobUpdateEvent, ClientToServerMessage, ItemStackUpdateEvent, PlayerSpawnEvent,
+        ServerToClientMessage,
     },
     world::{block_to_chunk_coord, chunk_in_radius},
 };
@@ -30,6 +31,7 @@ pub fn update_world_from_network(
     render_distance: Res<RenderDistance>,
     ev_player_spawn: &mut EventWriter<PlayerSpawnEvent>,
     ev_mob_update: &mut EventWriter<MobUpdateEvent>,
+    ev_item_stacks_update: &mut EventWriter<ItemStackUpdateEvent>,
 ) {
     let (player_pos, current_player) = players.get(current_player_entity.single()).unwrap();
     let current_player_id = current_player.id;
@@ -95,6 +97,8 @@ pub fn update_world_from_network(
                     debug!("ServerMob received: {:?}", mob);
                     ev_mob_update.send(MobUpdateEvent { mob });
                 }
+
+                ev_item_stacks_update.send_batch(world_update.item_stacks);
 
                 // get current time
                 client_time.0 = world_update.time;

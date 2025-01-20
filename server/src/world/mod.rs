@@ -9,7 +9,10 @@ use bevy::prelude::IVec3;
 use bevy::prelude::ResMut;
 use bevy::prelude::*;
 use shared::world::BlockData;
+use shared::world::ItemStack;
+use shared::world::ServerItemStack;
 use shared::world::ServerWorldMap;
+use ulid::Ulid;
 
 #[derive(Event, Debug)]
 pub struct BlockInteractionEvent {
@@ -30,6 +33,30 @@ pub fn handle_block_interactions(
             }
             None => {
                 // Supprimer un bloc
+
+                for (id, nb) in world_map
+                    .get_block_by_coordinates(&event.position)
+                    .unwrap()
+                    .id
+                    .get_drops(1)
+                {
+                    world_map.item_stacks.push(ServerItemStack {
+                        id: Ulid::new().0,
+                        despawned: false,
+                        stack: ItemStack {
+                            item_id: id,
+                            item_type: id.get_default_type(),
+                            nb,
+                        },
+                        pos: Vec3::new(
+                            event.position.x as f32 + 0.5,
+                            event.position.y as f32 + 0.5,
+                            event.position.z as f32 + 0.5,
+                        ),
+                        timestamp: 0,
+                    });
+                }
+
                 world_map.remove_block_by_coordinates(&event.position);
                 info!("Block removed at {:?}", event.position);
             }
