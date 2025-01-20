@@ -509,8 +509,6 @@ pub fn multiplayer_action(
                     if let Some(srv) = list.servers.get(&serv_entity) {
                         info!("Server : name={}, ip={}", srv.name, srv.ip);
 
-                        // TODO : try to connect player with srv.ip provided
-                        // TODO: Recover from another place
                         target_server.address = Some(srv.ip.parse().unwrap());
                         target_server.state = TargetServerState::Initial;
                         game_state.set(GameState::PreGameLoading);

@@ -33,7 +33,7 @@ use super::SendGameMessageExtension;
 #[derive(Debug, Clone, PartialEq)]
 pub enum TargetServerState {
     Initial,
-    Establising,
+    Establishing,
     ConnectionEstablished,
     FullyReady, // player has spawned
 }
@@ -275,7 +275,7 @@ pub fn establish_authenticated_connection_to_server(
             username: username.clone(),
         });
         client.send_game_message(auth_msg);
-        target.state = TargetServerState::Establising;
+        target.state = TargetServerState::Establishing;
     }
 
     while let Some(message) = client.receive_message(DefaultChannel::ReliableOrdered) {

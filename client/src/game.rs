@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 use crate::mob::*;
 use crate::ui::hud::chat::{render_chat, setup_chat};
+use crate::ui::menus::{setup_server_connect_loading_screen, update_server_connect_loading_screen};
 use bevy::prelude::*;
 use bevy_atmosphere::prelude::*;
 use inventory::Inventory;
@@ -33,7 +34,6 @@ use crate::player::*;
 use crate::ui::hud::inventory::*;
 use shared::world::{BlockId, ItemId, WorldSeed};
 
-use crate::menus::loading::load_loading_screen;
 use crate::network::{
     establish_authenticated_connection_to_server, init_server_connection,
     launch_local_server_system, network_failure_handler, poll_network_messages,
@@ -93,10 +93,10 @@ pub fn game_plugin(app: &mut App) {
         .add_systems(
             OnEnter(GameState::PreGameLoading),
             (
-                load_loading_screen,
                 launch_local_server_system,
                 init_server_connection,
                 setup_materials,
+                setup_server_connect_loading_screen,
             )
                 .chain(),
         )
@@ -107,6 +107,7 @@ pub fn game_plugin(app: &mut App) {
                 create_all_atlases,
                 check_pre_loading_complete,
                 spawn_players_system,
+                update_server_connect_loading_screen,
             )
                 .run_if(in_state(GameState::PreGameLoading)),
         )

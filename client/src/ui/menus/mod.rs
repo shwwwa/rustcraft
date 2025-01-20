@@ -1,13 +1,14 @@
 pub mod home;
-pub mod loading;
 pub mod multi;
 pub mod pause;
+pub mod server_connect_loading;
 pub mod settings;
 pub mod solo;
 pub mod splash;
 
 use bevy::prelude::*;
 pub use home::*;
+pub use server_connect_loading::*;
 
 use bevy::input::mouse::{MouseScrollUnit, MouseWheel};
 
