@@ -58,6 +58,8 @@ impl Player {
     }
 }
 
+pub const PLAYER_LABEL_FONT_SIZE: f32 = 24.0;
+
 pub fn spawn_players_system(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -114,6 +116,7 @@ pub fn spawn_players_system(
         // We need the full version of this font so we can use box drawing characters.
         let text_style = TextFont {
             font: assets.load("fonts/FiraMono-Medium.ttf"),
+            font_size: PLAYER_LABEL_FONT_SIZE,
             ..default()
         };
 
@@ -133,18 +136,17 @@ pub fn spawn_players_system(
                     position_type: PositionType::Absolute,
                     ..default()
                 },
-                PlayerLabel { entity: entity_id },
+                PlayerLabel {
+                    entity: entity_id,
+                    name: player_name.clone(),
+                },
+                Transform::from_translation(Vec3::new(0.0, 5.0, 0.0)),
                 StateScoped(GameState::Game),
             ))
             .with_children(|parent| {
                 parent.spawn((
                     Text::new(player_name),
                     label_text_style.clone(),
-                    Node {
-                        position_type: PositionType::Absolute,
-                        bottom: Val::ZERO,
-                        ..default()
-                    },
                     TextLayout::default().with_no_wrap(),
                 ));
             });
