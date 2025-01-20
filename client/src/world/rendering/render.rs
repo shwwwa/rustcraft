@@ -1,4 +1,4 @@
-use crate::world::FirstChunkReceived;
+use crate::{player::CurrentPlayerMarker, world::FirstChunkReceived};
 use std::collections::HashSet;
 use std::sync::Arc;
 
@@ -76,6 +76,7 @@ pub fn world_render_system(
     mut meshes: ResMut<Assets<Mesh>>,
     mut commands: Commands,
     mut first_chunk_received: ResMut<FirstChunkReceived>,
+    player_pos: Query<&Transform, With<CurrentPlayerMarker>>,
 ) {
     for event in ev_render.read() {
         queued_events.events.insert(*event);
@@ -113,6 +114,20 @@ pub fn world_render_system(
                 chunks_to_reload.insert(*target_chunk_pos + *offset);
             }
         }
+
+        let player_pos = player_pos.single().translation;
+        let player_pos = global_block_to_chunk_pos(&IVec3::new(
+            player_pos.x as i32,
+            player_pos.y as i32,
+            player_pos.z as i32,
+        ));
+
+        let mut chunks_to_reload = Vec::from_iter(chunks_to_reload);
+
+        chunks_to_reload.sort_by(|a, b| {
+            (a.distance_squared(player_pos) - b.distance_squared(player_pos))
+                .cmp(&a.distance_squared(player_pos))
+        });
 
         for pos in chunks_to_reload {
             if let Some(chunk) = world_map.map.get(&pos) {
