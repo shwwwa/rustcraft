@@ -36,8 +36,6 @@ pub fn stack_update_system(
                 }
             }
 
-            debug!("-------------------- SPAWNING DROPS STACK : {pos:?}");
-
             let mut mesh = Cuboid::from_size(if let ItemType::Block(_) = stack.item_type {
                 Vec3::new(0.2, 0.2, 0.2)
             } else {

@@ -258,7 +258,6 @@ pub fn player_movement_system(
         &player,
         world_map.as_ref(),
     ) {
-        debug!("------------------------------ Vertical collision yippee");
         // Si un bloc est détecté sous le joueur, il reste sur le bloc
         player.on_ground = true;
         player.vertical_velocity = 0.0; // Réinitialiser la vélocité verticale si le joueur est au sol

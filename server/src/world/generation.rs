@@ -32,7 +32,14 @@ fn generate_tree(chunk: &mut ServerChunk, x: i32, y: i32, z: i32, trunk: BlockId
     );
 }
 
-fn generate_big_tree(chunk: &mut ServerChunk, x: i32, y: i32, z: i32, trunk: BlockId, leaves: BlockId) {
+fn generate_big_tree(
+    chunk: &mut ServerChunk,
+    x: i32,
+    y: i32,
+    z: i32,
+    trunk: BlockId,
+    leaves: BlockId,
+) {
     // create trunk
     let trunk_height = 4 + rand::random::<u8>() % 3; // random height between 4 and 7
     for dy in 0..trunk_height {
@@ -45,16 +52,14 @@ fn generate_big_tree(chunk: &mut ServerChunk, x: i32, y: i32, z: i32, trunk: Blo
     // place the leaves
     let leaf_start_y = y + trunk_height as i32 - 2;
     for layer in 0..2 {
-        let current_y = leaf_start_y + layer as i32;
-        for offset_x in -2..=2 {
-            for offset_z in -2..=2 {
-                if !(offset_x  == 0 && offset_z == 0) {
-                    if !((offset_x as i32).abs() == 2 && (offset_z as i32).abs() == 2) {
-                        chunk.map.insert(
-                            IVec3::new(x + offset_x, current_y, z + offset_z),
-                            BlockData::new(leaves, false, BlockDirection::Front),
-                        );
-                    }
+        let current_y = leaf_start_y + layer;
+        for offset_x in -2i32..=2i32 {
+            for offset_z in -2i32..=2i32 {
+                if !(offset_x == 0 && offset_z == 0 || offset_x.abs() == 2 && offset_z.abs() == 2) {
+                    chunk.map.insert(
+                        IVec3::new(x + offset_x, current_y, z + offset_z),
+                        BlockData::new(leaves, false, BlockDirection::Front),
+                    );
                 }
             }
         }
@@ -66,7 +71,6 @@ fn generate_big_tree(chunk: &mut ServerChunk, x: i32, y: i32, z: i32, trunk: Blo
         BlockData::new(leaves, false, BlockDirection::Front),
     );
 }
-
 
 fn generate_cactus(chunk: &mut ServerChunk, x: i32, y: i32, z: i32, cactus: BlockId) {
     let cactus_height = 2 + rand::random::<u8>() % 2;

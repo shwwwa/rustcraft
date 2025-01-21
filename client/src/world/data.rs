@@ -91,11 +91,9 @@ impl WorldMap for ClientWorldMap {
 
     fn check_collision_box(&self, hitbox: &Aabb3d) -> bool {
         // Check all blocks inside the hitbox
-        let mut n = 0;
         for x in (hitbox.min.x.round() as i32)..=(hitbox.max.x.round() as i32) {
             for y in (hitbox.min.y.round() as i32)..=(hitbox.max.y.round() as i32) {
                 for z in (hitbox.min.z.round() as i32)..=(hitbox.max.z.round() as i32) {
-                    n += 1;
                     if let Some(block) = self.get_block_by_coordinates(&IVec3::new(x, y, z)) {
                         if block.id.has_hitbox() {
                             return true;
@@ -104,7 +102,6 @@ impl WorldMap for ClientWorldMap {
                 }
             }
         }
-        debug!("------------------------- Blocks tested : {n}, hitbox : {hitbox:?}");
         false
     }
 
