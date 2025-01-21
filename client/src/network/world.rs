@@ -1,7 +1,4 @@
-use crate::{
-    player::{CurrentPlayerMarker, Player},
-    world::ClientChunk,
-};
+use crate::{player::CurrentPlayerMarker, world::ClientChunk};
 use bevy::prelude::*;
 use bevy_renet::renet::{DefaultChannel, RenetClient};
 use bincode::Options;
@@ -10,6 +7,7 @@ use shared::{
         mob::MobUpdateEvent, ClientToServerMessage, ItemStackUpdateEvent, PlayerSpawnEvent,
         ServerToClientMessage,
     },
+    players::Player,
     world::{block_to_chunk_coord, chunk_in_radius},
 };
 

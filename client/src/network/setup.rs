@@ -5,12 +5,13 @@ use bevy_renet::netcode::{
 use bevy_renet::{renet::RenetClient, RenetClientPlugin};
 use rand::Rng;
 use shared::messages::mob::MobUpdateEvent;
+use shared::players::Player;
 use shared::{get_shared_renet_config, GameServerConfig};
 
 use crate::menus::solo::SelectedWorld;
 use crate::network::world::update_world_from_network;
 use crate::network::{update_cached_chat_state, CachedChatConversation};
-use crate::player::{CurrentPlayerMarker, Player};
+use crate::player::CurrentPlayerMarker;
 use crate::world::render_distance::RenderDistance;
 use crate::world::time::ClientTime;
 use crate::world::WorldRenderRequestUpdateEvent;

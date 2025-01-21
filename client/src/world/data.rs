@@ -89,18 +89,35 @@ impl WorldMap for ClientWorldMap {
         chunk.map.insert(IVec3::new(sub_x, sub_y, sub_z), block);
     }
 
-    fn check_map_collision(&self, hitbox: &Aabb3d) -> bool {
+    fn check_collision_box(&self, hitbox: &Aabb3d) -> bool {
         // Check all blocks inside the hitbox
-        for x in (hitbox.min.x.round() as i32)..(hitbox.max.x.round() as i32) {
-            for y in (hitbox.min.y.round() as i32)..(hitbox.max.y.round() as i32) {
-                for z in (hitbox.min.z.round() as i32)..(hitbox.max.z.round() as i32) {
-                    if self.map.contains_key(&IVec3::new(x, y, z)) {
-                        return true;
+        let mut n = 0;
+        for x in (hitbox.min.x.round() as i32)..=(hitbox.max.x.round() as i32) {
+            for y in (hitbox.min.y.round() as i32)..=(hitbox.max.y.round() as i32) {
+                for z in (hitbox.min.z.round() as i32)..=(hitbox.max.z.round() as i32) {
+                    n += 1;
+                    if let Some(block) = self.get_block_by_coordinates(&IVec3::new(x, y, z)) {
+                        if block.id.has_hitbox() {
+                            return true;
+                        }
                     }
                 }
             }
         }
+        debug!("------------------------- Blocks tested : {n}, hitbox : {hitbox:?}");
         false
+    }
+
+    fn check_collision_point(&self, point: &Vec3) -> bool {
+        if let Some(block) = self.get_block_by_coordinates(&IVec3::new(
+            point.x.round() as i32,
+            point.y.round() as i32,
+            point.z.round() as i32,
+        )) {
+            block.id.has_hitbox()
+        } else {
+            false
+        }
     }
 }
 

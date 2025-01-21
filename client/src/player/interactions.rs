@@ -2,7 +2,6 @@ use crate::constants::{CUBE_SIZE, INTERACTION_DISTANCE};
 use crate::mob::{MobMarker, TargetedMob, TargetedMobData};
 use crate::network::SendGameMessageExtension;
 use crate::player::inventory::*;
-use crate::player::spawn::Player;
 use crate::ui::hud::hotbar::Hotbar;
 use crate::ui::hud::UIMode;
 use crate::world::{raycast, ClientWorldMap};
@@ -12,6 +11,7 @@ use bevy::math::NormedVectorSpace;
 use bevy::prelude::*;
 use bevy_renet::renet::RenetClient;
 use shared::messages::ClientToServerMessage;
+use shared::players::Player;
 use shared::world::{BlockData, ItemStack, ItemType, WorldMap};
 
 use super::{CurrentPlayerMarker, ViewMode};

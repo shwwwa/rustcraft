@@ -132,7 +132,8 @@ pub trait WorldMap {
     fn get_block_by_coordinates(&self, position: &IVec3) -> Option<&BlockData>;
     fn remove_block_by_coordinates(&mut self, global_block_pos: &IVec3) -> Option<BlockData>;
     fn set_block(&mut self, position: &IVec3, block: BlockData);
-    fn check_map_collision(&self, hitbox: &Aabb3d) -> bool;
+    fn check_collision_box(&self, hitbox: &Aabb3d) -> bool;
+    fn check_collision_point(&self, point: &Vec3) -> bool;
 }
 
 impl WorldMap for ServerWorldMap {
@@ -192,18 +193,32 @@ impl WorldMap for ServerWorldMap {
         self.chunks_to_update.push(IVec3::new(cx, cy, cz));
     }
 
-    fn check_map_collision(&self, hitbox: &Aabb3d) -> bool {
+    fn check_collision_box(&self, hitbox: &Aabb3d) -> bool {
         // Check all blocks inside the hitbox
         for x in (hitbox.min.x.round() as i32)..(hitbox.max.x.round() as i32) {
             for y in (hitbox.min.y.round() as i32)..(hitbox.max.y.round() as i32) {
                 for z in (hitbox.min.z.round() as i32)..(hitbox.max.z.round() as i32) {
-                    if self.map.contains_key(&IVec3::new(x, y, z)) {
-                        return true;
+                    if let Some(block) = self.get_block_by_coordinates(&IVec3::new(x, y, z)) {
+                        if block.id.has_hitbox() {
+                            return true;
+                        }
                     }
                 }
             }
         }
         false
+    }
+
+    fn check_collision_point(&self, point: &Vec3) -> bool {
+        if let Some(block) = self.get_block_by_coordinates(&IVec3::new(
+            point.x.round() as i32,
+            point.y.round() as i32,
+            point.z.round() as i32,
+        )) {
+            block.id.has_hitbox()
+        } else {
+            false
+        }
     }
 }
 

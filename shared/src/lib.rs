@@ -4,6 +4,7 @@ use bevy::{math::Vec3, prelude::Resource};
 use bevy_renet::renet::{ChannelConfig, ConnectionConfig, SendType};
 
 pub mod messages;
+pub mod players;
 pub mod world;
 
 #[derive(Resource, Debug, Clone)]
