@@ -94,7 +94,7 @@ impl WorldMap for ClientWorldMap {
         for x in (hitbox.min.x.round() as i32)..(hitbox.max.x.round() as i32) {
             for y in (hitbox.min.y.round() as i32)..(hitbox.max.y.round() as i32) {
                 for z in (hitbox.min.z.round() as i32)..(hitbox.max.z.round() as i32) {
-                    if self.map.get(&IVec3::new(x, y, z)).is_some() {
+                    if self.map.contains_key(&IVec3::new(x, y, z)) {
                         return true;
                     }
                 }
