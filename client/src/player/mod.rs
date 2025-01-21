@@ -1,6 +1,5 @@
 mod controller;
 mod interactions;
-pub(crate) mod inventory;
 mod labels;
 mod spawn;
 

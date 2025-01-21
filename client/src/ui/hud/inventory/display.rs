@@ -2,7 +2,6 @@ use super::{add_item_floating_stack, remove_item_floating_stack, UIMode};
 use crate::constants::MAX_HOTBAR_SLOTS;
 use crate::input::data::GameAction;
 use crate::input::keyboard::is_action_just_pressed;
-use crate::player::inventory::Inventory;
 use crate::ui::hud::hotbar::Hotbar;
 use crate::ui::hud::{FloatingStack, InventoryCell, InventoryRoot};
 use crate::world::MaterialResource;
@@ -19,6 +18,7 @@ use bevy::prelude::{
 use bevy::sprite::TextureAtlas;
 use bevy::ui::{BorderColor, Interaction};
 use bevy::window::PrimaryWindow;
+use shared::players::Inventory;
 use shared::world::{ItemId, ItemStack};
 
 pub fn render_inventory_hotbar(

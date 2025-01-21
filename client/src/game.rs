@@ -6,9 +6,9 @@ use crate::ui::hud::chat::{render_chat, setup_chat};
 use crate::ui::menus::{setup_server_connect_loading_screen, update_server_connect_loading_screen};
 use bevy::prelude::*;
 use bevy_atmosphere::prelude::*;
-use inventory::Inventory;
 use shared::messages::mob::MobUpdateEvent;
 use shared::messages::{ItemStackUpdateEvent, PlayerSpawnEvent};
+use shared::players::Inventory;
 
 use crate::world::time::ClientTime;
 use crate::world::ClientWorldMap;

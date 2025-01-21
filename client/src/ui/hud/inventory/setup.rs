@@ -1,11 +1,10 @@
 use super::UiDialog;
-use crate::constants::{
-    HOTBAR_BORDER, HOTBAR_CELL_SIZE, HOTBAR_PADDING, MAX_HOTBAR_SLOTS, MAX_INVENTORY_SLOTS,
-};
+use crate::constants::{HOTBAR_BORDER, HOTBAR_CELL_SIZE, HOTBAR_PADDING, MAX_HOTBAR_SLOTS};
 use crate::ui::hud::{FloatingStack, InventoryCell, InventoryDialog, InventoryRoot};
 use crate::world::MaterialResource;
 use crate::GameState;
 use bevy::{prelude::*, ui::FocusPolicy};
+use shared::MAX_INVENTORY_SLOTS;
 
 pub fn setup_inventory(mut commands: Commands, materials_resource: Res<MaterialResource>) {
     let atlas = materials_resource.items.as_ref().unwrap();

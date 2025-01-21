@@ -24,6 +24,7 @@ pub struct GameServerConfig {
     pub is_solo: bool,
 }
 
+pub const MAX_INVENTORY_SLOTS: u32 = 4 * 9;
 pub const PROTOCOL_ID: u64 = 0;
 pub const CHUNK_SIZE: i32 = 16;
 pub const HALF_BLOCK: Vec3 = Vec3 {

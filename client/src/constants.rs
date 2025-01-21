@@ -12,7 +12,6 @@ pub const CELESTIAL_SIZE: f32 = 10.;
 pub const CELESTIAL_DISTANCE: f32 = 50.; // Low value for testing ; will be increased later
 pub const DAY_DURATION: f32 = 60.;
 
-pub const MAX_INVENTORY_SLOTS: u32 = 4 * 9;
 pub const MAX_HOTBAR_SLOTS: u32 = 9;
 
 pub const HOTBAR_CELL_SIZE: f32 = 50.;
