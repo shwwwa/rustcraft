@@ -9,10 +9,12 @@ use shared::{
         collision::check_player_collision,
         constants::{GRAVITY, JUMP_VELOCITY},
     },
-    world::ServerWorldMap,
+    world::{ServerWorldMap, WorldSeed},
 };
 
-use crate::network::extensions::SendGameMessageExtension;
+use crate::{network::extensions::SendGameMessageExtension, world::generation::generate_chunk};
+
+use super::broadcast_world::get_all_active_chunks;
 
 #[derive(Event, Debug)]
 pub struct PlayerInputsEvent {
@@ -25,7 +27,19 @@ pub fn handle_player_inputs_system(
     mut events: EventReader<PlayerInputsEvent>,
     mut world_map: ResMut<ServerWorldMap>,
     mut server: ResMut<RenetServer>,
+    seed: Res<WorldSeed>,
 ) {
+    let active_chunks = get_all_active_chunks(&world_map);
+    for c in active_chunks {
+        let chunk = world_map.map.get(&c);
+
+        if chunk.is_none() {
+            let chunk = generate_chunk(c, seed.0);
+            info!("Generated chunk: {:?}", c);
+            world_map.map.insert(c, chunk);
+        }
+    }
+
     let world_clone = world_map.clone();
 
     let mut player_actions = HashMap::<u64, HashSet<NetworkPlayerInput>>::new();
@@ -44,8 +58,8 @@ pub fn handle_player_inputs_system(
 
     for p in player_actions.iter_mut() {
         let player = world_map.players.get_mut(p.0).unwrap();
-        let initial_pos = player.position.clone();
-        let initial_rot = player.camera_transform.rotation.clone();
+        let initial_pos = player.position;
+        let initial_rot = player.camera_transform.rotation;
 
         let mut is_jumping = false;
 

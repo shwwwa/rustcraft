@@ -41,20 +41,6 @@ fn to_network(world_map: &mut ServerWorldMap, seed: Res<WorldSeed>, tick: u64) -
             new_map
         },
         new_map: {
-            // let mut m: HashMap<IVec3, ServerChunk> = HashMap::new();
-            // // Only send chunks that must be updated
-            // for v in world_map.chunks_to_update.iter() {
-            //     m.insert(*v, world_map.map.get(v).unwrap().clone());
-            // }
-            // // Chunks are up do date, clear the vector
-            // world_map.chunks_to_update.clear();
-            // m
-
-            // Send all chunks
-            //           let full_map = world_map.map.clone();
-            //           info!("Sending full map: {:?}", full_map.keys());
-            //           full_map
-
             // Send only chunks in render distance
             let mut map: HashMap<IVec3, ServerChunk> = HashMap::new();
 
@@ -97,7 +83,7 @@ fn to_network(world_map: &mut ServerWorldMap, seed: Res<WorldSeed>, tick: u64) -
 
 const RENDER_DISTANCE: i32 = 1;
 
-fn get_all_active_chunks(world_map: &ServerWorldMap) -> Vec<IVec3> {
+pub fn get_all_active_chunks(world_map: &ServerWorldMap) -> Vec<IVec3> {
     let player_chunks: Vec<IVec3> = world_map
         .players
         .values()
