@@ -1,6 +1,5 @@
 use crate::init::ServerTime;
 use crate::network::extensions::SendGameMessageExtension;
-use crate::world::generation::generate_chunk;
 use bevy::math::IVec3;
 use bevy::prelude::*;
 use bevy_ecs::system::ResMut;
@@ -10,20 +9,19 @@ use shared::players::Player;
 use shared::world::{world_position_to_chunk_position, ServerChunk, ServerWorldMap};
 use std::collections::HashMap;
 
-use shared::world::data::WorldSeed;
+pub const BROADCAST_RENDER_DISTANCE: i32 = 2;
 
 pub fn broadcast_world_state(
     mut server: ResMut<RenetServer>,
     time: Res<ServerTime>,
     mut world_map: ResMut<ServerWorldMap>,
-    seed: Res<WorldSeed>,
 ) {
     let ts = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .unwrap()
         .as_millis() as u64;
 
-    for c in get_all_active_chunks(&world_map) {
+    for c in get_all_active_chunks(&world_map, BROADCAST_RENDER_DISTANCE) {
         let chunk = world_map.map.get(&c);
 
         if chunk.is_none() {
@@ -36,7 +34,7 @@ pub fn broadcast_world_state(
                 tick: time.0,
                 time: ts,
                 player_positions: get_player_positions(&world_map),
-                new_map: get_world_map_chunks_to_send(&mut world_map, &seed, &player),
+                new_map: get_world_map_chunks_to_send(&mut world_map, &player),
                 mobs: world_map.mobs.clone(),
                 item_stacks: get_items_stacks(&world_map),
                 player_events: vec![],
@@ -66,13 +64,12 @@ fn get_player_positions(world_map: &ServerWorldMap) -> HashMap<u64, Vec3> {
 
 fn get_world_map_chunks_to_send(
     world_map: &mut ServerWorldMap,
-    seed: &WorldSeed,
     player: &Player,
 ) -> HashMap<IVec3, ServerChunk> {
     // Send only chunks in render distance
     let mut map: HashMap<IVec3, ServerChunk> = HashMap::new();
 
-    let active_chunks = get_all_active_chunks(world_map);
+    let active_chunks = get_all_active_chunks(world_map, BROADCAST_RENDER_DISTANCE);
     for c in active_chunks {
         if map.len() >= 10 {
             break;
@@ -88,15 +85,6 @@ fn get_world_map_chunks_to_send(
 
             map.insert(c, chunk.clone());
             chunk.sent_to_clients.push(player.id);
-        } else {
-            // If chunk does not exists, generate it before transmitting it
-            let mut chunk = generate_chunk(c, seed.0);
-            chunk.sent_to_clients.push(player.id);
-
-            info!("Generated chunk: {:?}", c);
-
-            map.insert(c, chunk.clone());
-            world_map.map.insert(c, chunk);
         }
     }
 
@@ -118,14 +106,12 @@ fn get_items_stacks(world_map: &ServerWorldMap) -> Vec<ItemStackUpdateEvent> {
         .collect()
 }
 
-const RENDER_DISTANCE: i32 = 2;
-
-pub fn get_all_active_chunks(world_map: &ServerWorldMap) -> Vec<IVec3> {
+pub fn get_all_active_chunks(world_map: &ServerWorldMap, radius: i32) -> Vec<IVec3> {
     let player_chunks: Vec<IVec3> = world_map
         .players
         .values()
         .map(|v| world_position_to_chunk_position(v.position))
-        .flat_map(|v| get_player_nearby_chunks_coords(v, RENDER_DISTANCE))
+        .flat_map(|v| get_player_nearby_chunks_coords(v, radius))
         .collect();
 
     let mut chunks: Vec<IVec3> = Vec::new();

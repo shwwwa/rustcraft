@@ -29,7 +29,7 @@ pub fn handle_player_inputs_system(
     mut server: ResMut<RenetServer>,
     seed: Res<WorldSeed>,
 ) {
-    let active_chunks = get_all_active_chunks(&world_map);
+    let active_chunks = get_all_active_chunks(&world_map, 1);
     for c in active_chunks {
         let chunk = world_map.map.get(&c);
 

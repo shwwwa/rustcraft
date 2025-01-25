@@ -138,21 +138,6 @@ pub fn launch_local_server_system(
     }
 }
 
-// fn poll_reliable_ordered_messages(
-//     _client: &mut ResMut<RenetClient>,
-//     _chat_state: &mut ResMut<CachedChatConversation>,
-// ) {
-// while let Some(message) = client.receive_game_message(DefaultChannel::ReliableOrdered) {
-//     let message = bincode::options().deserialize::<ChatConversation>(&message);
-//     match message {
-//         Ok(data) => {
-//             update_cached_chat_state(chat_state, data);
-//         }
-//         Err(e) => error!("err {}", e),
-//     };
-// }
-// }
-
 pub fn poll_network_messages(
     mut client: ResMut<RenetClient>,
     // mut chat_state: ResMut<CachedChatConversation>,

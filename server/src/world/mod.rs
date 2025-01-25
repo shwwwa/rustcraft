@@ -1,7 +1,10 @@
+pub mod background_generation;
+pub mod broadcast_world;
 mod data;
 pub mod generation;
 pub mod load_from_file;
 pub mod save;
+pub mod simulation;
 pub mod stacks;
 
 use bevy::prelude::Event;

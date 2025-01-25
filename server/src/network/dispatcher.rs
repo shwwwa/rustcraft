@@ -1,8 +1,10 @@
 use crate::init::{ServerLobby, ServerTime};
 use crate::network::broadcast_chat::*;
-use crate::network::broadcast_world::*;
 use crate::world;
+use crate::world::background_generation::background_world_generation_system;
+use crate::world::broadcast_world::broadcast_world_state;
 use crate::world::save::SaveRequestEvent;
+use crate::world::simulation::{handle_player_inputs_system, PlayerInputsEvent};
 use crate::world::BlockInteractionEvent;
 use bevy::prelude::*;
 use bevy_renet::renet::{RenetServer, ServerEvent};
@@ -15,7 +17,6 @@ use shared::world::ServerWorldMap;
 use shared::{GameServerConfig, TICKS_PER_SECOND};
 
 use super::extensions::SendGameMessageExtension;
-use super::simulation::{handle_player_inputs_system, PlayerInputsEvent};
 
 pub fn setup_resources_and_events(app: &mut App) {
     app.add_event::<SaveRequestEvent>()
@@ -36,6 +37,8 @@ pub fn register_systems(app: &mut App) {
     app.add_systems(Update, crate::mob::manage_mob_spawning_system);
 
     app.add_systems(Update, handle_player_inputs_system);
+
+    app.add_systems(Update, background_world_generation_system);
 
     app.add_systems(PostUpdate, update_server_time);
 }

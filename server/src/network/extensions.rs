@@ -1,6 +1,6 @@
 use bevy::prelude::*;
-use bevy_renet::renet::{ClientId, DefaultChannel, RenetServer};
-use shared::utils::format_bytes;
+use bevy_renet::renet::{ClientId, RenetServer};
+use shared::{get_default_game_channel, utils::format_bytes};
 
 pub trait SendGameMessageExtension {
     fn send_game_message(
@@ -26,7 +26,7 @@ impl SendGameMessageExtension for RenetServer {
         if size > (10 * 1024) {
             info!("Sending game message of size: {}", format_bytes(size));
         }
-        self.send_message(client_id, DefaultChannel::ReliableOrdered, payload);
+        self.send_message(client_id, get_default_game_channel(), payload);
     }
 
     fn broadcast_game_message(&mut self, message: shared::messages::ServerToClientMessage) {
@@ -35,14 +35,14 @@ impl SendGameMessageExtension for RenetServer {
         if size > (10 * 1024) {
             info!("Broadcasting game message of size: {}", format_bytes(size));
         }
-        self.broadcast_message(DefaultChannel::ReliableOrdered, payload);
+        self.broadcast_message(get_default_game_channel(), payload);
     }
 
     fn receive_game_message(
         &mut self,
         client_id: ClientId,
     ) -> Result<shared::messages::ClientToServerMessage, Box<bincode::ErrorKind>> {
-        let payload = self.receive_message(client_id, DefaultChannel::ReliableOrdered);
+        let payload = self.receive_message(client_id, get_default_game_channel());
         if let Some(payload) = payload {
             // debug!("Received payload: {:?}", payload);
             let msg = shared::payload_to_game_message::<shared::messages::ClientToServerMessage>(

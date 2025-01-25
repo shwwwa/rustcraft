@@ -1,7 +1,7 @@
 use std::time::Duration;
 
 use bevy::prelude::*;
-use bevy_renet::renet::{ChannelConfig, ConnectionConfig, SendType};
+use bevy_renet::renet::{ChannelConfig, ConnectionConfig, DefaultChannel, SendType};
 use bincode::Options;
 
 pub mod constants;
@@ -65,15 +65,17 @@ pub fn get_shared_renet_config() -> ConnectionConfig {
 
 pub fn game_message_to_payload<T: serde::Serialize>(message: T) -> Vec<u8> {
     let payload = bincode::options().serialize(&message).unwrap();
-    debug!(
-        "Original payload size: {}",
-        format_bytes(payload.len() as u64)
-    );
     let output = lz4::block::compress(&payload, None, true).unwrap();
-    debug!(
-        "Compressed payload of size: {}",
-        format_bytes(output.len() as u64)
-    );
+    if payload.len() > 1024 {
+        debug!(
+            "Original payload size: {}",
+            format_bytes(payload.len() as u64)
+        );
+        debug!(
+            "Compressed payload of size: {}",
+            format_bytes(output.len() as u64)
+        );
+    }
     output
 }
 
@@ -82,4 +84,8 @@ pub fn payload_to_game_message<T: serde::de::DeserializeOwned>(
 ) -> Result<T, bincode::Error> {
     let decompressed_payload = lz4::block::decompress(payload, None)?;
     bincode::options().deserialize(&decompressed_payload)
+}
+
+pub fn get_default_game_channel() -> DefaultChannel {
+    DefaultChannel::ReliableUnordered
 }
