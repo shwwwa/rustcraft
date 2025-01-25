@@ -195,6 +195,7 @@ pub fn generate_chunk(chunk_pos: IVec3, seed: u32) -> ServerChunk {
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap()
             .as_millis() as u64,
+        sent_to_clients: vec![],
     };
 
     for dx in 0..CHUNK_SIZE {

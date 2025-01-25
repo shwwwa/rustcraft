@@ -101,6 +101,12 @@ pub fn handle_player_inputs_system(
             if *action == NetworkPlayerInput::MoveRight {
                 direction += right;
             }
+            if *action == NetworkPlayerInput::FlyUp {
+                direction += Vec3::new(0.0, 1.0, 0.0);
+            }
+            if *action == NetworkPlayerInput::FlyDown {
+                direction -= Vec3::new(0.0, 1.0, 0.0);
+            }
         }
 
         // Handle jumping (if on the ground) and gravity, only if not flying
@@ -124,26 +130,32 @@ pub fn handle_player_inputs_system(
             player.velocity.y = max_velocity;
         }
 
-        // Vérifier uniquement les collisions verticales (sol et plafond)
-        if check_player_collision(new_vec, player, &world_clone) {
-            // Si un bloc est détecté sous le joueur, il reste sur le bloc
-            player.on_ground = true;
-            player.velocity.y = 0.0; // Réinitialiser la vélocité verticale si le joueur est au sol
-        } else {
-            // Si aucun bloc n'est détecté sous le joueur, il continue de tomber
-            player.position.y = new_y;
-            player.on_ground = false;
+        if !player.is_flying {
+            // Vérifier uniquement les collisions verticales (sol et plafond)
+            if check_player_collision(new_vec, player, &world_clone) {
+                // Si un bloc est détecté sous le joueur, il reste sur le bloc
+                player.on_ground = true;
+                player.velocity.y = 0.0; // Réinitialiser la vélocité verticale si le joueur est au sol
+            } else {
+                // Si aucun bloc n'est détecté sous le joueur, il continue de tomber
+                player.position.y = new_y;
+                player.on_ground = false;
+            }
         }
 
-        // Attempt to move the player by the calculated direction
-        let new_x = player.position.x + direction.x * 0.1;
-        let new_z = player.position.z + direction.z * 0.1;
+        let speed = if player.is_flying { 0.5 } else { 0.1 };
 
-        let new_vec = &Vec3::new(new_x, player.position.y, new_z);
-        if check_player_collision(new_vec, player, &world_clone) {
+        // Attempt to move the player by the calculated direction
+        let new_x = player.position.x + direction.x * speed;
+        let new_y = player.position.y + direction.y * speed;
+        let new_z = player.position.z + direction.z * speed;
+
+        let new_vec = &Vec3::new(new_x, new_y, new_z);
+        if check_player_collision(new_vec, player, &world_clone) && !player.is_flying {
             // If a block is detected in the new position, don't move the player
         } else {
             player.position.x = new_x;
+            player.position.y = new_y;
             player.position.z = new_z;
         }
 

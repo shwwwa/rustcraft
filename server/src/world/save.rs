@@ -37,7 +37,7 @@ pub fn save_world_system(
     if save_requested {
         let world_data = WorldData {
             map: world_map.clone(),
-            seed: world_seed.clone(),
+            seed: *world_seed,
             time: time.0,
         };
 

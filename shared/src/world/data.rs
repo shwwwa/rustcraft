@@ -30,6 +30,7 @@ pub struct ServerChunk {
     pub map: HashMap<IVec3, BlockData>,
     /// Timestamp marking the last update this chunk has received
     pub ts: u64,
+    pub sent_to_clients: Vec<PlayerId>,
 }
 
 // #[derive(Resource)]
@@ -46,7 +47,7 @@ pub struct ServerWorldMap {
     pub time: u64,
 }
 
-#[derive(Resource, Clone, Serialize, Deserialize)]
+#[derive(Resource, Clone, Copy, Serialize, Deserialize)]
 pub struct WorldSeed(pub u32);
 
 #[derive(Debug, Clone, Serialize, Deserialize, Copy, Default)]

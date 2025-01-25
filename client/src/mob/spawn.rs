@@ -13,23 +13,19 @@ pub fn spawn_mobs_system(
     mut mobs: Query<(&MobRoot, &mut Transform)>,
 ) {
     'event_loop: for event in ev_update.read() {
-        info!("--- SHOULD SPAWN OR UPDATE MOB ON CLIENT: {:?}", event);
         let id = event.mob.id;
 
         let position = event.mob.position;
 
         for (mob, mut transform) in mobs.iter_mut() {
             if mob.id == id {
-                info!(
-                    "Mob already exists, updating: id={:?}, position={:?}",
-                    id, position
-                );
                 transform.translation = position;
                 continue 'event_loop;
             }
         }
 
         if event.mob.kind == shared::world::MobKind::Fox {
+            info!("Spawning fox at {:?}", position);
             setup_fox(id, position, &mut commands, &asset_server, &mut graphs);
         }
     }
