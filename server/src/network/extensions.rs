@@ -1,7 +1,6 @@
 use bevy::prelude::*;
 use bevy_renet::renet::{ClientId, DefaultChannel, RenetServer};
-
-use crate::network::utils::format_bytes;
+use shared::utils::format_bytes;
 
 pub trait SendGameMessageExtension {
     fn send_game_message(

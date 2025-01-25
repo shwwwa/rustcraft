@@ -1,15 +1,17 @@
 use std::time::Duration;
 
-use bevy::prelude::Resource;
+use bevy::prelude::*;
 use bevy_renet::renet::{ChannelConfig, ConnectionConfig, SendType};
 use bincode::Options;
 
 pub mod constants;
 pub mod messages;
 pub mod players;
+pub mod utils;
 pub mod world;
 
 pub use constants::*;
+use utils::format_bytes;
 
 #[derive(Resource, Debug, Clone)]
 pub struct GameFolderPaths {
@@ -62,16 +64,22 @@ pub fn get_shared_renet_config() -> ConnectionConfig {
 }
 
 pub fn game_message_to_payload<T: serde::Serialize>(message: T) -> Vec<u8> {
-    bincode::options().serialize(&message).unwrap()
-    // let payload = bincode::options().serialize(&message).unwrap();
-    // payload
-    // lz4::block::compress(&payload, None, false).unwrap()
+    let payload = bincode::options().serialize(&message).unwrap();
+    debug!(
+        "Original payload size: {}",
+        format_bytes(payload.len() as u64)
+    );
+    let output = lz4::block::compress(&payload, None, true).unwrap();
+    debug!(
+        "Compressed payload of size: {}",
+        format_bytes(output.len() as u64)
+    );
+    output
 }
 
 pub fn payload_to_game_message<T: serde::de::DeserializeOwned>(
     payload: &[u8],
 ) -> Result<T, bincode::Error> {
-    // let decompressed_payload = lz4::block::decompress(payload, None).unwrap();
-    // bincode::options().deserialize(&decompressed_payload)
-    bincode::options().deserialize(payload)
+    let decompressed_payload = lz4::block::decompress(payload, None)?;
+    bincode::options().deserialize(&decompressed_payload)
 }
