@@ -171,8 +171,13 @@ fn server_update_system(
                     }
                 }
                 ClientToServerMessage::PlayerInputs(inputs) => {
-                    // debug!("Received player inputs: {:?} for {:?}", inputs, client_id);
-                    ev_player_inputs.send(PlayerInputsEvent { client_id, inputs });
+                    // info!("Received {} player inputs", inputs.len());
+                    for input in inputs.iter() {
+                        ev_player_inputs.send(PlayerInputsEvent {
+                            client_id,
+                            input: input.clone(),
+                        });
+                    }
                 }
                 ClientToServerMessage::SaveWorldRequest => {
                     debug!("Save request received from client with session token");

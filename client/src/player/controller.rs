@@ -1,11 +1,16 @@
 use crate::input::data::GameAction;
 use crate::input::keyboard::*;
+use crate::network::buffered_client::{
+    CurrentFrameInputs, CurrentFrameInputsExt, PlayerTickInputsBuffer, SyncTime, SyncTimeExt,
+};
 use crate::player::ViewMode;
 use crate::ui::hud::debug::DebugOptions;
 use crate::ui::hud::UIMode;
 use crate::world::{ClientWorldMap, WorldRenderRequestUpdateEvent};
 use crate::KeyMap;
 use bevy::prelude::*;
+use shared::messages::NetworkAction;
+use shared::players::movement::simulate_player_movement;
 use shared::players::Player;
 
 use super::CurrentPlayerMarker;
@@ -15,12 +20,43 @@ pub struct PlayerMaterialHandle {
     pub handle: Handle<StandardMaterial>,
 }
 
+pub fn pre_input_update_system(
+    mut frame_inputs: ResMut<CurrentFrameInputs>,
+    mut tick_buffer: ResMut<PlayerTickInputsBuffer>,
+    mut sync_time: ResMut<SyncTime>,
+) {
+    sync_time.curr_time_ms = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap()
+        .as_millis() as u64;
+
+    let inputs = frame_inputs.0.clone();
+    tick_buffer.buffer.push(inputs);
+    frame_inputs.reset(sync_time.curr_time_ms);
+}
+
 pub fn player_movement_system(
-    queries: Query<&mut Player, With<CurrentPlayerMarker>>,
-    resources: (Res<ButtonInput<KeyCode>>, Res<UIMode>, Res<KeyMap>),
+    queries: Query<(&mut Player, &mut Transform), (With<CurrentPlayerMarker>, Without<Camera>)>,
+    camera: Query<&Transform, With<Camera>>,
+    resources: (
+        Res<ButtonInput<KeyCode>>,
+        Res<UIMode>,
+        Res<KeyMap>,
+        ResMut<CurrentFrameInputs>,
+    ),
+    time: Res<SyncTime>,
+    world_map: Res<ClientWorldMap>,
 ) {
     let mut player_query = queries;
-    let (keyboard_input, ui_mode, key_map) = resources;
+    let (keyboard_input, ui_mode, key_map, mut frame_inputs) = resources;
+
+    if time.delta() == 0 {
+        return;
+    }
+
+    let camera = camera.single();
+    let camera_orientation = camera.rotation;
+    frame_inputs.0.camera = camera_orientation;
 
     let res = player_query.get_single_mut();
     // Return early if the player has not been spawned yet
@@ -29,13 +65,39 @@ pub fn player_movement_system(
         return;
     }
 
-    let mut player = player_query.single_mut();
+    let (mut player, mut player_transform) = player_query.single_mut();
 
     if *ui_mode == UIMode::Closed
         && is_action_just_pressed(GameAction::ToggleFlyMode, &keyboard_input, &key_map)
     {
         player.toggle_fly_mode();
     }
+
+    if is_action_pressed(GameAction::MoveBackward, &keyboard_input, &key_map) {
+        frame_inputs.0.inputs.insert(NetworkAction::MoveBackward);
+    }
+    if is_action_pressed(GameAction::MoveForward, &keyboard_input, &key_map) {
+        frame_inputs.0.inputs.insert(NetworkAction::MoveForward);
+    }
+    if is_action_pressed(GameAction::MoveLeft, &keyboard_input, &key_map) {
+        frame_inputs.0.inputs.insert(NetworkAction::MoveLeft);
+    }
+    if is_action_pressed(GameAction::MoveRight, &keyboard_input, &key_map) {
+        frame_inputs.0.inputs.insert(NetworkAction::MoveRight);
+    }
+    if is_action_pressed(GameAction::Jump, &keyboard_input, &key_map) {
+        frame_inputs.0.inputs.insert(NetworkAction::JumpOrFlyUp);
+    }
+    if is_action_pressed(GameAction::FlyDown, &keyboard_input, &key_map) {
+        frame_inputs.0.inputs.insert(NetworkAction::SneakOrFlyDown);
+    }
+
+    let world_clone = world_map.clone();
+    let frame_inputs = frame_inputs.0.clone();
+
+    simulate_player_movement(&mut player, &world_clone, &frame_inputs, 17);
+
+    player_transform.translation = player.position;
 }
 
 pub fn first_and_third_person_view_system(

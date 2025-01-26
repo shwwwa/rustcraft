@@ -134,6 +134,7 @@ pub struct Player {
     // pub inventory: HashMap<RegistryId, items::Item>,
     pub height: f32,
     pub width: f32,
+    pub last_input_processed: u64,
 }
 
 impl Player {
@@ -148,6 +149,7 @@ impl Player {
             is_flying: false,
             height: 1.8,
             width: 0.8,
+            last_input_processed: 0,
         }
     }
 

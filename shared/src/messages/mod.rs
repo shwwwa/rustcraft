@@ -20,7 +20,7 @@ pub enum ClientToServerMessage {
     AuthRegisterRequest(AuthRegisterRequest),
     ChatMessage(ChatMessageRequest),
     Exit,
-    PlayerInputs(PlayerInputs),
+    PlayerInputs(Vec<PlayerFrameInput>),
     SaveWorldRequest,
     BlockInteraction {
         position: IVec3,

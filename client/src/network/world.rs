@@ -42,8 +42,8 @@ pub fn update_world_from_network(
 
     while let Ok(msg) = client.receive_game_message() {
         // truncate the message to 1000 characters
-        let debug_msg = format!("{:?}", msg).chars().take(1000).collect::<String>();
-        info!("Received message: {}", debug_msg);
+        // let debug_msg = format!("{:?}", msg).chars().take(1000).collect::<String>();
+        // info!("Received message: {}", debug_msg);
         match msg {
             ServerToClientMessage::WorldUpdate(world_update) => {
                 debug!(

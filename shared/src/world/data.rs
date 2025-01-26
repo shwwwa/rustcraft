@@ -137,6 +137,7 @@ pub trait WorldMap {
     fn set_block(&mut self, position: &IVec3, block: BlockData);
     fn check_collision_box(&self, hitbox: &Aabb3d) -> bool;
     fn check_collision_point(&self, point: &Vec3) -> bool;
+    fn get_surrounding_chunks(&self, position: Vec3, radius: i32) -> Vec<IVec3>;
 }
 
 impl WorldMap for ServerWorldMap {
@@ -225,6 +226,24 @@ impl WorldMap for ServerWorldMap {
         } else {
             false
         }
+    }
+
+    fn get_surrounding_chunks(&self, position: Vec3, radius: i32) -> Vec<IVec3> {
+        let mut chunks = Vec::new();
+        let x = position.x as i32;
+        let y = position.y as i32;
+        let z = position.z as i32;
+        let cx = block_to_chunk_coord(x);
+        let cy = block_to_chunk_coord(y);
+        let cz = block_to_chunk_coord(z);
+        for i in -radius..=radius {
+            for j in -radius..=radius {
+                for k in -radius..=radius {
+                    chunks.push(IVec3::new(cx + i, cy + j, cz + k));
+                }
+            }
+        }
+        chunks
     }
 }
 

@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use crate::entities::stack::stack_update_system;
 use crate::mob::*;
-use crate::network::buffered_client::BufferedInputs;
+use crate::network::buffered_client::{CurrentFrameInputs, PlayerTickInputsBuffer, SyncTime};
 use crate::ui::hud::chat::{render_chat, setup_chat};
 use crate::ui::menus::{setup_server_connect_loading_screen, update_server_connect_loading_screen};
 use bevy::prelude::*;
@@ -90,7 +90,9 @@ pub fn game_plugin(app: &mut App) {
         .init_resource::<FoxFeetTargets>()
         .init_resource::<Animations>()
         .init_resource::<TargetedMob>()
-        .init_resource::<BufferedInputs>()
+        .init_resource::<PlayerTickInputsBuffer>()
+        .init_resource::<CurrentFrameInputs>()
+        .init_resource::<SyncTime>()
         .insert_resource(Time::<Fixed>::from_hz(TICKS_PER_SECOND as f64))
         .add_event::<WorldRenderRequestUpdateEvent>()
         .add_event::<PlayerSpawnEvent>()
@@ -196,11 +198,15 @@ pub fn game_plugin(app: &mut App) {
                 .run_if(in_state(GameState::Game)),
         )
         .add_systems(
+            PreUpdate,
+            pre_input_update_system.run_if(in_state(GameState::Game)),
+        )
+        .add_systems(
             FixedPreUpdate,
             poll_network_messages.run_if(in_state(GameState::Game)),
         )
         .add_systems(
-            Update,
+            FixedUpdate,
             upload_player_inputs_system.run_if(in_state(GameState::Game)),
         )
         .add_systems(

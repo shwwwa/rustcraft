@@ -117,6 +117,24 @@ impl WorldMap for ClientWorldMap {
             false
         }
     }
+
+    fn get_surrounding_chunks(&self, position: Vec3, radius: i32) -> Vec<IVec3> {
+        let mut chunks: Vec<IVec3> = Vec::new();
+        let x: i32 = position.x.round() as i32;
+        let y: i32 = position.y.round() as i32;
+        let z: i32 = position.z.round() as i32;
+        let cx: i32 = block_to_chunk_coord(x);
+        let cy: i32 = block_to_chunk_coord(y);
+        let cz: i32 = block_to_chunk_coord(z);
+        for dx in -radius..=radius {
+            for dy in -radius..=radius {
+                for dz in -radius..=radius {
+                    chunks.push(IVec3::new(cx + dx, cy + dy, cz + dz));
+                }
+            }
+        }
+        chunks
+    }
 }
 
 impl ClientWorldMap {

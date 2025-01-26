@@ -29,7 +29,11 @@ pub fn broadcast_world_state(
         }
 
         for client in server.clients_id().iter_mut() {
-            let player = world_map.players.get(client).unwrap().clone();
+            let player = world_map.players.get_mut(client);
+            let player = match player {
+                Some(p) => p.clone(),
+                None => continue,
+            };
             let msg = WorldUpdate {
                 tick: time.0,
                 time: ts,
