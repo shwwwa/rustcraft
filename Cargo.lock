@@ -1795,7 +1795,6 @@ dependencies = [
  "lazy_static",
  "log",
  "noise",
- "ordered-float",
  "rand",
  "ron 0.6.6",
  "serde",
@@ -3597,17 +3596,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "ordered-float"
-version = "4.6.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7bb71e1b3fa6ca1c61f383464aaf2bb0e2f8e772a1f01d486832464de363b951"
-dependencies = [
- "num-traits",
- "rand",
- "serde",
-]
-
-[[package]]
 name = "overload"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3848,7 +3836,6 @@ dependencies = [
  "libc",
  "rand_chacha",
  "rand_core",
- "serde",
 ]
 
 [[package]]
@@ -3868,7 +3855,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ec0be4795e2f6a28069bec0b5ff3e2ac9bafc99e6a9a7dc3547996c5c816922c"
 dependencies = [
  "getrandom",
- "serde",
 ]
 
 [[package]]
@@ -4255,7 +4241,6 @@ dependencies = [
  "bincode",
  "log",
  "lz4",
- "ordered-float",
  "rand",
  "serde",
 ]

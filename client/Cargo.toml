@@ -19,7 +19,6 @@ server = { path = "../server" }
 log = { version = "*", features = ["max_level_debug", "release_max_level_warn"] }
 clap = { version = "4.5.19", features = ["derive"] }
 bevy-inspector-egui = "0.28.1"
-ordered-float = "4.6.0"
 
 [lints]
 workspace = true

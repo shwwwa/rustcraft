@@ -1,16 +1,7 @@
 use bevy::{prelude::*, utils::HashSet};
-use ordered_float::OrderedFloat;
 use serde::{Deserialize, Serialize};
 
 use super::PlayerId;
-
-#[derive(Serialize, Deserialize, PartialEq, Debug, Clone, Hash, Eq)]
-pub struct CustomQuaternion {
-    pub x: OrderedFloat<f32>,
-    pub y: OrderedFloat<f32>,
-    pub z: OrderedFloat<f32>,
-    pub w: OrderedFloat<f32>,
-}
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone, Eq, Hash)]
 pub enum NetworkAction {
@@ -21,12 +12,6 @@ pub enum NetworkAction {
     JumpOrFlyUp,
     SneakOrFlyDown,
     ToggleFlyMode,
-}
-
-impl From<CustomQuaternion> for Quat {
-    fn from(val: CustomQuaternion) -> Self {
-        Quat::from_xyzw(val.x.into(), val.y.into(), val.z.into(), val.w.into())
-    }
 }
 
 #[derive(Event, Serialize, Deserialize, PartialEq, Debug, Clone)]
@@ -46,7 +31,7 @@ pub struct PlayerUpdateEvent {
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
 pub struct PlayerFrameInput {
-    pub time_ms: u64, // time of creation
+    pub time_ms: u64,
     pub delta_ms: u64,
     pub inputs: HashSet<NetworkAction>,
     pub camera: Quat,
