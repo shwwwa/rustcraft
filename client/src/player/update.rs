@@ -130,14 +130,9 @@ pub fn update_players_system(
     client: Res<TargetServer>,
     world_map: Res<ClientWorldMap>,
 ) {
-    info!(
-        "my session token: {:?} as {:?}",
-        client.session_token, client.username
-    );
     let my_id = client.session_token.unwrap();
     for event in ev_player_update.read() {
         for (mut player, mut transform) in players.iter_mut() {
-            info!("player id: {:?} / name = {}", player.id, player.name);
             if player.id == event.id && event.id == my_id {
                 let matching_input = unacknowledged_inputs
                     .0
@@ -174,7 +169,7 @@ pub fn update_players_system(
                             remaining_inputs.len()
                         );
                     } else {
-                        info!("Player position matches: {:?}", player.position);
+                        debug!("Player position matches: {:?}", player.position);
                     }
                 } else {
                     debug!(

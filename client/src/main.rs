@@ -16,6 +16,7 @@ use bevy::{
         settings::{RenderCreation, WgpuFeatures, WgpuSettings},
         RenderPlugin,
     },
+    window::PresentMode,
 };
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use clap::Parser;
@@ -147,6 +148,14 @@ fn main() {
             .set(AssetPlugin {
                 file_path: "../data".to_string(),
                 ..Default::default()
+            })
+            .set(WindowPlugin {
+                primary_window: Some(Window {
+                    title: "Rustcraft".to_string(),
+                    present_mode: PresentMode::AutoVsync,
+                    ..default()
+                }),
+                ..default()
             }),
     );
     app.add_plugins(WorldInspectorPlugin::new());
