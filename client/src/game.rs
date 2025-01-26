@@ -42,7 +42,7 @@ use crate::network::{
     establish_authenticated_connection_to_server, init_server_connection,
     launch_local_server_system, network_failure_handler, poll_network_messages,
     terminate_server_connection, upload_player_inputs_system, CurrentPlayerProfile, TargetServer,
-    TargetServerState,
+    TargetServerState, UnacknowledgedInputs,
 };
 
 use crate::GameState;
@@ -93,6 +93,7 @@ pub fn game_plugin(app: &mut App) {
         .init_resource::<PlayerTickInputsBuffer>()
         .init_resource::<CurrentFrameInputs>()
         .init_resource::<SyncTime>()
+        .init_resource::<UnacknowledgedInputs>()
         .insert_resource(Time::<Fixed>::from_hz(TICKS_PER_SECOND as f64))
         .add_event::<WorldRenderRequestUpdateEvent>()
         .add_event::<PlayerSpawnEvent>()

@@ -53,8 +53,6 @@ pub fn setup_server_connect_loading_screen(mut commands: Commands, asset_server:
         p.spawn(loading_text_bundle);
         p.spawn(cancel_button_bundle);
     });
-
-    info!("------------ loading server connect loading screen ------------");
 }
 
 pub fn update_server_connect_loading_screen(

@@ -41,11 +41,15 @@ pub struct PlayerUpdateEvent {
     pub id: PlayerId,
     pub position: Vec3,
     pub orientation: Quat,
+    pub last_ack_time: u64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
 pub struct PlayerFrameInput {
-    pub time_ms: u64,
+    pub time_ms: u64, // time of creation
+    pub delta_ms: u64,
     pub inputs: HashSet<NetworkAction>,
     pub camera: Quat,
+    #[serde(skip)]
+    pub position: Vec3,
 }

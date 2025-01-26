@@ -16,7 +16,7 @@ impl From<AuthRegisterRequest> for ClientToServerMessage {
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 pub struct AuthRegisterResponse {
     pub username: String,
-    pub session_token: u128,
+    pub session_token: u64,
     pub tick: u64,
     pub timestamp_ms: u64,
     pub players: Vec<PlayerSpawnEvent>, // all players (including the new one)

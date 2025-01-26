@@ -5,14 +5,11 @@ use bevy_renet::netcode::{
 use bevy_renet::{renet::RenetClient, RenetClientPlugin};
 use rand::Rng;
 use shared::messages::mob::MobUpdateEvent;
-use shared::players::Player;
 use shared::{get_shared_renet_config, GameServerConfig};
 
 use crate::menus::solo::SelectedWorld;
 use crate::network::world::update_world_from_network;
 use crate::network::CachedChatConversation;
-use crate::player::CurrentPlayerMarker;
-use crate::world::render_distance::RenderDistance;
 use crate::world::time::ClientTime;
 use crate::world::WorldRenderRequestUpdateEvent;
 use crate::PlayerNameSupplied;
@@ -78,7 +75,7 @@ impl FromWorld for CurrentPlayerProfile {
 pub struct TargetServer {
     pub address: Option<SocketAddr>,
     pub username: Option<String>,
-    pub session_token: Option<u128>,
+    pub session_token: Option<u64>,
     pub state: TargetServerState,
 }
 
@@ -144,9 +141,6 @@ pub fn poll_network_messages(
     // client_time: ResMut<ClientTime>,
     mut world: ResMut<ClientWorldMap>,
     mut ev_render: EventWriter<WorldRenderRequestUpdateEvent>,
-    mut players: Query<(&mut Transform, &Player), With<Player>>,
-    current_player_entity: Query<Entity, With<CurrentPlayerMarker>>,
-    render_distance: Res<RenderDistance>,
     mut ev_player_spawn: EventWriter<PlayerSpawnEvent>,
     mut ev_mob_update: EventWriter<MobUpdateEvent>,
     mut ev_item_stacks_update: EventWriter<ItemStackUpdateEvent>,
@@ -156,11 +150,7 @@ pub fn poll_network_messages(
     update_world_from_network(
         &mut client,
         &mut world,
-        // client_time,
         &mut ev_render,
-        &mut players,
-        current_player_entity,
-        render_distance,
         &mut ev_player_spawn,
         &mut ev_mob_update,
         &mut ev_item_stacks_update,

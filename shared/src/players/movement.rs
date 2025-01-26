@@ -15,15 +15,14 @@ pub fn simulate_player_movement(
     player: &mut Player,
     world_map: &(impl WorldMap + Clone),
     action: &PlayerFrameInput,
-    delta_ms: u64,
-) -> bool {
+) {
     // TODO: Ridiculous performance issue, clone should be avoided
     let world_clone = world_map.clone();
 
-    let delta = delta_ms as f32 / 1000.0;
+    let delta = action.delta_ms as f32 / 1000.0;
 
-    let initial_pos = player.position;
-    let initial_rot = player.camera_transform.rotation;
+    // let initial_pos = player.position;
+    // let initial_rot = player.camera_transform.rotation;
 
     let mut is_jumping = false;
 
@@ -121,12 +120,12 @@ pub fn simulate_player_movement(
         player.velocity.y = 0.0;
     }
 
-    let has_moved = player.position != initial_pos;
-    let has_rotated = player.camera_transform.rotation != initial_rot;
+    // let has_moved = player.position != initial_pos;
+    // let has_rotated = player.camera_transform.rotation != initial_rot;
 
-    let requires_network_broadcast = has_moved || has_rotated;
+    // let requires_network_broadcast = has_moved || has_rotated;
 
-    requires_network_broadcast
+    // requires_network_broadcast
 }
 
 trait IsPressed {

@@ -120,7 +120,7 @@ fn server_update_system(
                     // TODO: add cleanup system if no heartbeat
                     let auth_res = AuthRegisterResponse {
                         username: auth_req.username,
-                        session_token: client_id as u128,
+                        session_token: client_id,
                         tick: time.0,
                         timestamp_ms,
                         players: all_player_spawn_events,

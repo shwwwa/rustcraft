@@ -279,26 +279,6 @@ impl Default for FoxFeetTargets {
     }
 }
 
-// pub fn move_fox_towards_player(
-//     mut fox_transforms: Query<&mut Transform, With<MobRoot>>,
-//     player_transform: Query<&Transform, (With<CurrentPlayerMarker>, Without<MobRoot>)>,
-// ) {
-//     let player_transform = player_transform.get_single();
-//     if let Ok(player_transform) = player_transform {
-//         for mut fox_transform in &mut fox_transforms.iter_mut() {
-//             let direction = player_transform.translation - fox_transform.translation;
-//             let direction = direction.normalize();
-//             let speed = 0.04;
-//             fox_transform.translation += direction * speed;
-
-//             let y_angle_to_player = (player_transform.translation.x - fox_transform.translation.x)
-//                 .atan2(player_transform.translation.z - fox_transform.translation.z);
-
-//             fox_transform.rotation = Quat::from_rotation_y(y_angle_to_player);
-//         }
-//     }
-// }
-
 // TODO: only update the color of the targeted mob, not all mobs sharing the same material
 pub fn update_targetted_mob_color(
     mut query: Query<(&mut MeshMaterial3d<StandardMaterial>, &MobMarker)>,

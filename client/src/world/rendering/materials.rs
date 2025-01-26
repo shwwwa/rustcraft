@@ -196,8 +196,6 @@ pub fn create_all_atlases(
             );
 
             material_resource.blocks = Some(blocks);
-
-            debug!("Value of material_resource: {:?}", material_resource);
         } else {
             warn!("Failed to load block textures");
             loading.textures_loaded = false;

@@ -10,15 +10,17 @@ pub struct PlayerTickInputsBuffer {
 pub struct CurrentFrameInputs(pub PlayerFrameInput);
 
 pub trait CurrentFrameInputsExt {
-    fn reset(&mut self, time: u64);
+    fn reset(&mut self, time: u64, delta: u64);
 }
 
 impl CurrentFrameInputsExt for CurrentFrameInputs {
-    fn reset(&mut self, time: u64) {
+    fn reset(&mut self, new_time: u64, new_delta: u64) {
         self.0 = PlayerFrameInput {
-            time_ms: time,
+            time_ms: new_time,
+            delta_ms: new_delta,
             inputs: HashSet::default(),
             camera: Quat::default(),
+            position: Vec3::default(),
         };
     }
 }
@@ -48,10 +50,19 @@ impl Default for SyncTime {
 
 pub trait SyncTimeExt {
     fn delta(&self) -> u64;
+    fn advance(&mut self);
 }
 
 impl SyncTimeExt for SyncTime {
     fn delta(&self) -> u64 {
         self.curr_time_ms - self.last_time_ms
+    }
+
+    fn advance(&mut self) {
+        self.last_time_ms = self.curr_time_ms;
+        self.curr_time_ms = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_millis() as u64;
     }
 }

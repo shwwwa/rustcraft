@@ -25,14 +25,11 @@ pub fn pre_input_update_system(
     mut tick_buffer: ResMut<PlayerTickInputsBuffer>,
     mut sync_time: ResMut<SyncTime>,
 ) {
-    sync_time.curr_time_ms = std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .unwrap()
-        .as_millis() as u64;
+    sync_time.advance();
 
-    let inputs = frame_inputs.0.clone();
-    tick_buffer.buffer.push(inputs);
-    frame_inputs.reset(sync_time.curr_time_ms);
+    let inputs_of_last_frame = frame_inputs.0.clone();
+    tick_buffer.buffer.push(inputs_of_last_frame);
+    frame_inputs.reset(sync_time.curr_time_ms, sync_time.delta());
 }
 
 pub fn player_movement_system(
@@ -44,13 +41,12 @@ pub fn player_movement_system(
         Res<KeyMap>,
         ResMut<CurrentFrameInputs>,
     ),
-    time: Res<SyncTime>,
     world_map: Res<ClientWorldMap>,
 ) {
     let mut player_query = queries;
     let (keyboard_input, ui_mode, key_map, mut frame_inputs) = resources;
 
-    if time.delta() == 0 {
+    if frame_inputs.0.delta_ms == 0 {
         return;
     }
 
@@ -70,7 +66,7 @@ pub fn player_movement_system(
     if *ui_mode == UIMode::Closed
         && is_action_just_pressed(GameAction::ToggleFlyMode, &keyboard_input, &key_map)
     {
-        player.toggle_fly_mode();
+        frame_inputs.0.inputs.insert(NetworkAction::ToggleFlyMode);
     }
 
     if is_action_pressed(GameAction::MoveBackward, &keyboard_input, &key_map) {
@@ -93,11 +89,17 @@ pub fn player_movement_system(
     }
 
     let world_clone = world_map.clone();
-    let frame_inputs = frame_inputs.0.clone();
 
-    simulate_player_movement(&mut player, &world_clone, &frame_inputs, 17);
+    simulate_player_movement(&mut player, &world_clone, &frame_inputs.0);
+
+    frame_inputs.0.position = player.position;
 
     player_transform.translation = player.position;
+
+    // debug!(
+    //     "At t={}, player position: {:?}",
+    //     frame_inputs.0.time_ms, player.position
+    // );
 }
 
 pub fn first_and_third_person_view_system(

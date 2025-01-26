@@ -9,7 +9,7 @@ use shared::players::Player;
 use shared::world::{world_position_to_chunk_position, ServerChunk, ServerWorldMap};
 use std::collections::HashMap;
 
-pub const BROADCAST_RENDER_DISTANCE: i32 = 2;
+pub const BROADCAST_RENDER_DISTANCE: i32 = 1;
 
 pub fn broadcast_world_state(
     mut server: ResMut<RenetServer>,
@@ -37,7 +37,6 @@ pub fn broadcast_world_state(
             let msg = WorldUpdate {
                 tick: time.0,
                 time: ts,
-                player_positions: get_player_positions(&world_map),
                 new_map: get_world_map_chunks_to_send(&mut world_map, &player),
                 mobs: world_map.mobs.clone(),
                 item_stacks: get_items_stacks(&world_map),
@@ -53,17 +52,6 @@ pub fn broadcast_world_state(
             server.send_game_message(*client, message);
         }
     }
-}
-
-fn get_player_positions(world_map: &ServerWorldMap) -> HashMap<u64, Vec3> {
-    let new_map = world_map
-        .players
-        .clone()
-        .iter()
-        .map(|(k, v)| (*k, v.position))
-        .collect();
-
-    new_map
 }
 
 fn get_world_map_chunks_to_send(

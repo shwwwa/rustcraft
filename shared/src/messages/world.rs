@@ -7,7 +7,7 @@ use bevy::{
 };
 use serde::{Deserialize, Serialize};
 
-use super::{PlayerId, PlayerUpdateEvent};
+use super::PlayerUpdateEvent;
 
 /// WorldUpdate is a message sent from the server to the client to update the client's world state.
 /// Only chunks which have been updated since the last message are sent.
@@ -16,7 +16,6 @@ pub struct WorldUpdate {
     pub tick: u64,
     pub time: u64,
     pub new_map: HashMap<IVec3, ServerChunk>,
-    pub player_positions: HashMap<PlayerId, Vec3>,
     pub mobs: Vec<ServerMob>,
     pub item_stacks: Vec<ItemStackUpdateEvent>,
     pub player_events: Vec<PlayerUpdateEvent>,
