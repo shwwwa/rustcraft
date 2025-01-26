@@ -1,9 +1,16 @@
 use bevy::{prelude::*, utils::HashSet};
+use serde::{Deserialize, Serialize};
 use shared::messages::NetworkPlayerInput;
 
 #[derive(Debug, Default, Resource)]
 pub struct BufferedInputs {
-    // represents the buffer of inputs of the current tick
-    // these inputs will be flushed within the same tick (50ms)
-    pub buffer: HashSet<NetworkPlayerInput>,
+    #[allow(dead_code)]
+    pub buffer: Vec<PlayerFrameInputs>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PlayerFrameInputs {
+    pub time_ms: u64,
+    pub inputs: HashSet<NetworkPlayerInput>,
+    pub camera: Quat,
 }

@@ -149,7 +149,10 @@ pub fn game_plugin(app: &mut App) {
             Update,
             (
                 render_distance_update_system,
-                player_inputs_handling_system,
+                player_movement_system,
+                first_and_third_person_view_system,
+                toggle_chunk_debug_mode_system,
+                chunk_force_reload_system,
                 (handle_block_interactions, camera_control_system).chain(),
                 fps_text_update_system,
                 coords_text_update_system,
