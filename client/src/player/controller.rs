@@ -88,9 +88,7 @@ pub fn player_movement_system(
         frame_inputs.0.inputs.insert(NetworkAction::SneakOrFlyDown);
     }
 
-    let world_clone = world_map.clone();
-
-    simulate_player_movement(&mut player, &world_clone, &frame_inputs.0);
+    simulate_player_movement(&mut player, world_map.as_ref(), &frame_inputs.0);
 
     frame_inputs.0.position = player.position;
 

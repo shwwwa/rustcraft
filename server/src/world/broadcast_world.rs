@@ -4,9 +4,11 @@ use bevy::math::IVec3;
 use bevy::prelude::*;
 use bevy_ecs::system::ResMut;
 use bevy_renet::renet::RenetServer;
-use shared::messages::{ItemStackUpdateEvent, ServerToClientMessage, WorldUpdate};
+use shared::messages::{ItemStackUpdateEvent, PlayerId, ServerToClientMessage, WorldUpdate};
 use shared::players::Player;
-use shared::world::{world_position_to_chunk_position, ServerChunk, ServerWorldMap};
+use shared::world::{
+    world_position_to_chunk_position, ServerChunk, ServerChunkWorldMap, ServerWorldMap,
+};
 use std::collections::HashMap;
 
 pub const BROADCAST_RENDER_DISTANCE: i32 = 1;
@@ -21,15 +23,21 @@ pub fn broadcast_world_state(
         .unwrap()
         .as_millis() as u64;
 
-    for c in get_all_active_chunks(&world_map, BROADCAST_RENDER_DISTANCE) {
-        let chunk = world_map.map.get(&c);
+    let world_map = world_map.as_mut();
+
+    let mobs = world_map.mobs.clone();
+    let players = &mut world_map.players;
+    let chunks = &mut world_map.chunks;
+
+    for c in get_all_active_chunks(players, BROADCAST_RENDER_DISTANCE) {
+        let chunk = chunks.map.get(&c);
 
         if chunk.is_none() {
             continue;
         }
 
         for client in server.clients_id().iter_mut() {
-            let player = world_map.players.get_mut(client);
+            let player = players.get_mut(client);
             let player = match player {
                 Some(p) => p.clone(),
                 None => continue,
@@ -37,9 +45,9 @@ pub fn broadcast_world_state(
             let msg = WorldUpdate {
                 tick: time.0,
                 time: ts,
-                new_map: get_world_map_chunks_to_send(&mut world_map, &player),
-                mobs: world_map.mobs.clone(),
-                item_stacks: get_items_stacks(&world_map),
+                new_map: get_world_map_chunks_to_send(chunks, players, &player),
+                mobs: mobs.clone(),
+                item_stacks: get_items_stacks(),
                 player_events: vec![],
             };
 
@@ -55,19 +63,20 @@ pub fn broadcast_world_state(
 }
 
 fn get_world_map_chunks_to_send(
-    world_map: &mut ServerWorldMap,
+    chunks: &mut ServerChunkWorldMap,
+    players: &HashMap<PlayerId, Player>,
     player: &Player,
 ) -> HashMap<IVec3, ServerChunk> {
     // Send only chunks in render distance
     let mut map: HashMap<IVec3, ServerChunk> = HashMap::new();
 
-    let active_chunks = get_all_active_chunks(world_map, BROADCAST_RENDER_DISTANCE);
+    let active_chunks = get_all_active_chunks(players, BROADCAST_RENDER_DISTANCE);
     for c in active_chunks {
         if map.len() >= 10 {
             break;
         }
 
-        let chunk = world_map.map.get_mut(&c);
+        let chunk = chunks.map.get_mut(&c);
 
         // If chunk already exists, transmit it to client
         if let Some(chunk) = chunk {
@@ -83,24 +92,25 @@ fn get_world_map_chunks_to_send(
     map
 }
 
-fn get_items_stacks(world_map: &ServerWorldMap) -> Vec<ItemStackUpdateEvent> {
-    world_map
-        .item_stacks
-        .iter()
-        .map(|stack| ItemStackUpdateEvent {
-            id: stack.id,
-            data: if stack.despawned {
-                None
-            } else {
-                Some((stack.stack, stack.pos))
-            },
-        })
-        .collect()
+fn get_items_stacks() -> Vec<ItemStackUpdateEvent> {
+    // TODO: Update later by requiring less data (does not need to borrow a full ServerWorldMap)
+    vec![]
+    // world_map
+    //     .item_stacks
+    //     .iter()
+    //     .map(|stack| ItemStackUpdateEvent {
+    //         id: stack.id,
+    //         data: if stack.despawned {
+    //             None
+    //         } else {
+    //             Some((stack.stack, stack.pos))
+    //         },
+    //     })
+    //     .collect()
 }
 
-pub fn get_all_active_chunks(world_map: &ServerWorldMap, radius: i32) -> Vec<IVec3> {
-    let player_chunks: Vec<IVec3> = world_map
-        .players
+pub fn get_all_active_chunks(players: &HashMap<PlayerId, Player>, radius: i32) -> Vec<IVec3> {
+    let player_chunks: Vec<IVec3> = players
         .values()
         .map(|v| world_position_to_chunk_position(v.position))
         .flat_map(|v| get_player_nearby_chunks_coords(v, radius))

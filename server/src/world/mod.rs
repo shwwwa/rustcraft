@@ -29,13 +29,14 @@ pub fn handle_block_interactions(
         match &event.block_type {
             Some(block) => {
                 // Ajouter un bloc
-                world_map.set_block(&event.position, *block);
+                world_map.chunks.set_block(&event.position, *block);
                 debug!("Block added at {:?}: {:?}", event.position, block);
             }
             None => {
                 // Supprimer un bloc
 
                 for (id, nb) in world_map
+                    .chunks
                     .get_block_by_coordinates(&event.position)
                     .unwrap()
                     .id
@@ -58,7 +59,9 @@ pub fn handle_block_interactions(
                     });
                 }
 
-                world_map.remove_block_by_coordinates(&event.position);
+                world_map
+                    .chunks
+                    .remove_block_by_coordinates(&event.position);
                 info!("Block removed at {:?}", event.position);
             }
         }

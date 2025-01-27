@@ -160,7 +160,7 @@ pub fn update_players_system(
 
                         for input in remaining_inputs.iter() {
                             // debug!("Reapplying input: {:?}", input);
-                            simulate_player_movement(&mut player, &world_map.clone(), input);
+                            simulate_player_movement(&mut player, world_map.as_ref(), input);
                         }
 
                         debug!(

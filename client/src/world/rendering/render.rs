@@ -113,7 +113,10 @@ pub fn world_render_system(
     let events = queued_events.events.clone();
 
     if !events.is_empty() {
+        let start = std::time::Instant::now();
         let map_ptr = Arc::new(world_map.clone());
+        let delta = start.elapsed();
+        info!("cloning map for render, took {:?}", delta);
 
         let uvs = Arc::new(material_resource.blocks.as_ref().unwrap().uvs.clone());
 

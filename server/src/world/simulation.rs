@@ -25,51 +25,53 @@ pub fn handle_player_inputs_system(
     mut server: ResMut<RenetServer>,
     seed: Res<WorldSeed>,
 ) {
-    let active_chunks = get_all_active_chunks(&world_map, 1);
+    let world_map = world_map.as_mut();
+    let players = &mut world_map.players;
+    let chunks = &mut world_map.chunks;
+
+    let active_chunks = get_all_active_chunks(players, 1);
     for c in active_chunks {
-        let chunk = world_map.map.get(&c);
+        let chunk = chunks.map.get(&c);
 
         if chunk.is_none() {
             let chunk = generate_chunk(c, seed.0);
             info!("Generated chunk: {:?}", c);
-            world_map.map.insert(c, chunk);
+            chunks.map.insert(c, chunk);
         }
     }
 
-    let world_clone = world_map.clone();
-
     let mut player_actions = HashMap::<u64, HashSet<NetworkAction>>::new();
-    for client_id in world_map.players.keys() {
+    for client_id in players.keys() {
         player_actions.insert(*client_id, HashSet::new());
     }
 
     for ev in events.read() {
-        info!(
-            "Processing player inputs for client_id: {} at t={}",
-            ev.client_id, ev.input.time_ms
-        );
-        let player = world_map.players.get_mut(&ev.client_id).unwrap();
+        // info!(
+        //     "Processing player inputs for client_id: {} at t={}",
+        //     ev.client_id, ev.input.time_ms
+        // );
+        let player = players.get_mut(&ev.client_id).unwrap();
         // info!(
         //     "Received player inputs: {:?} at t={}",
         //     ev.input.inputs, ev.input.time_ms
         // );
 
-        let initial = player.position;
+        // let initial = player.position;
 
-        simulate_player_movement(player, &world_clone, &ev.input.clone());
+        simulate_player_movement(player, chunks, &ev.input.clone());
 
-        let end = player.position;
-        if initial != end {
-            info!(
-                "Player moved: {:?} -> {:?} | {:?}",
-                initial, end, ev.input.position
-            );
-        }
+        // let end = player.position;
+        // if initial != end {
+        //     info!(
+        //         "Player moved: {:?} -> {:?} | {:?}",
+        //         initial, end, ev.input.position
+        //     );
+        // }
 
         player.last_input_processed = ev.input.time_ms;
     }
 
-    for player in world_map.players.values() {
+    for player in players.values() {
         server.broadcast_game_message(shared::messages::ServerToClientMessage::PlayerUpdate(
             PlayerUpdateEvent {
                 id: player.id,

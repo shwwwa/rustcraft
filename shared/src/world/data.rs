@@ -39,12 +39,17 @@ pub struct ServerChunk {
 #[derive(Resource, Default, Clone, Serialize, Deserialize, Debug)]
 pub struct ServerWorldMap {
     pub name: String,
-    pub map: HashMap<IVec3, ServerChunk>,
-    pub chunks_to_update: Vec<IVec3>,
+    pub chunks: ServerChunkWorldMap,
     pub players: HashMap<PlayerId, Player>,
     pub mobs: Vec<ServerMob>,
     pub item_stacks: Vec<ServerItemStack>,
     pub time: u64,
+}
+
+#[derive(Default, Clone, Serialize, Deserialize, Debug)]
+pub struct ServerChunkWorldMap {
+    pub map: HashMap<IVec3, ServerChunk>,
+    pub chunks_to_update: Vec<IVec3>,
 }
 
 #[derive(Resource, Clone, Copy, Serialize, Deserialize)]
@@ -140,7 +145,7 @@ pub trait WorldMap {
     fn get_surrounding_chunks(&self, position: Vec3, radius: i32) -> Vec<IVec3>;
 }
 
-impl WorldMap for ServerWorldMap {
+impl WorldMap for ServerChunkWorldMap {
     fn get_block_by_coordinates(&self, position: &IVec3) -> Option<&BlockData> {
         let x: i32 = position.x;
         let y: i32 = position.y;

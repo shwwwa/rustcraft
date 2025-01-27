@@ -12,7 +12,7 @@ use super::Player;
 
 pub fn simulate_player_movement(
     player: &mut Player,
-    world_map: &(impl WorldMap + Clone),
+    world_map: &impl WorldMap,
     action: &PlayerFrameInput,
 ) {
     // let's check if the 9 chunks around the player are loaded
@@ -21,9 +21,6 @@ pub fn simulate_player_movement(
         debug!("Not enough chunks loaded, skipping movement simulation");
         return;
     }
-
-    // TODO: Ridiculous performance issue, clone should be avoided
-    let world_clone = world_map.clone();
 
     let delta = action.delta_ms as f32 / 1000.0;
 
@@ -90,7 +87,7 @@ pub fn simulate_player_movement(
     }
 
     if !player.is_flying {
-        if check_player_collision(new_vec, player, &world_clone) {
+        if check_player_collision(new_vec, player, world_map) {
             player.on_ground = true;
             player.velocity.y = 0.0;
         } else {
@@ -108,7 +105,7 @@ pub fn simulate_player_movement(
     let new_z = player.position.z + direction.z * speed;
 
     let new_vec = &Vec3::new(new_x, new_y, new_z);
-    if check_player_collision(new_vec, player, &world_clone) && !player.is_flying {
+    if check_player_collision(new_vec, player, world_map) && !player.is_flying {
         // If a block is detected in the new position, don't move the player
     } else {
         player.position.x = new_x;
