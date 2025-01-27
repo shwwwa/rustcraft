@@ -10,19 +10,22 @@ use bevy::prelude::*;
 
 use super::Player;
 
-#[allow(clippy::let_and_return)]
 pub fn simulate_player_movement(
     player: &mut Player,
     world_map: &(impl WorldMap + Clone),
     action: &PlayerFrameInput,
 ) {
+    // let's check if the 9 chunks around the player are loaded
+    let chunks = world_map.get_surrounding_chunks(player.position, 1);
+    if chunks.len() < 9 {
+        debug!("Not enough chunks loaded, skipping movement simulation");
+        return;
+    }
+
     // TODO: Ridiculous performance issue, clone should be avoided
     let world_clone = world_map.clone();
 
     let delta = action.delta_ms as f32 / 1000.0;
-
-    // let initial_pos = player.position;
-    // let initial_rot = player.camera_transform.rotation;
 
     let mut is_jumping = false;
 
@@ -89,7 +92,7 @@ pub fn simulate_player_movement(
     if !player.is_flying {
         if check_player_collision(new_vec, player, &world_clone) {
             player.on_ground = true;
-            player.velocity.y = 0.0; // Réinitialiser la vélocité verticale si le joueur est au sol
+            player.velocity.y = 0.0;
         } else {
             player.position.y = new_y;
             player.on_ground = false;
@@ -119,13 +122,6 @@ pub fn simulate_player_movement(
         player.position = Vec3::new(0.0, 100.0, 0.0);
         player.velocity.y = 0.0;
     }
-
-    // let has_moved = player.position != initial_pos;
-    // let has_rotated = player.camera_transform.rotation != initial_rot;
-
-    // let requires_network_broadcast = has_moved || has_rotated;
-
-    // requires_network_broadcast
 }
 
 trait IsPressed {

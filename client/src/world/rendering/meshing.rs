@@ -1,5 +1,4 @@
 use std::f32::consts::PI;
-use std::panic::{catch_unwind, AssertUnwindSafe};
 use std::{collections::HashMap, time::Instant};
 
 use crate::world::{ClientChunk, ClientWorldMap};
@@ -155,8 +154,7 @@ pub(crate) fn generate_chunk_mesh(
 
     let should_return_solid = !solid_mesh_creator.vertices.is_empty();
     if should_return_solid {
-        debug!("Attempting to generate tangents for the mesh SOLID",);
-        if let Err(e) = catch_unwind(AssertUnwindSafe(|| solid_mesh.generate_tangents())) {
+        if let Err(e) = solid_mesh.generate_tangents() {
             warn!(
                 "Error while generating tangents for the mesh SOLID : {:?} | {:?}",
                 e, solid_mesh
@@ -166,8 +164,7 @@ pub(crate) fn generate_chunk_mesh(
 
     let should_return_liquid = !liquid_mesh_creator.vertices.is_empty();
     if should_return_liquid {
-        debug!("Attempting to generate tangents for the mesh LIQUID",);
-        if let Err(e) = catch_unwind(AssertUnwindSafe(|| liquid_mesh.generate_tangents())) {
+        if let Err(e) = liquid_mesh.generate_tangents() {
             warn!(
                 "Error while generating tangents for the mesh LIQUID : {:?} | {:?}",
                 e, liquid_mesh
