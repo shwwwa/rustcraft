@@ -235,7 +235,7 @@ pub fn establish_authenticated_connection_to_server(
         target.state = TargetServerState::Establishing;
     }
 
-    while let Ok(message) = client.receive_game_message() {
+    while let Some(Ok(message)) = client.receive_game_message() {
         match message {
             ServerToClientMessage::AuthRegisterResponse(message) => {
                 target.username = Some(message.username);

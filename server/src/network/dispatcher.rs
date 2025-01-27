@@ -82,7 +82,7 @@ fn server_update_system(
     }
 
     for client_id in server.clients_id() {
-        while let Ok(message) = server.receive_game_message(client_id) {
+        while let Some(Ok(message)) = server.receive_game_message(client_id) {
             match message {
                 ClientToServerMessage::AuthRegisterRequest(auth_req) => {
                     info!("Auth request received {:?}", auth_req);

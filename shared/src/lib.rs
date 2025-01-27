@@ -1,7 +1,7 @@
 use std::time::Duration;
 
 use bevy::prelude::*;
-use bevy_renet::renet::{ChannelConfig, ConnectionConfig, DefaultChannel, SendType};
+use bevy_renet::renet::{ChannelConfig, ConnectionConfig, SendType};
 use bincode::Options;
 
 pub mod constants;
@@ -11,6 +11,7 @@ pub mod utils;
 pub mod world;
 
 pub use constants::*;
+use messages::{ClientToServerMessage, ServerToClientMessage};
 use utils::format_bytes;
 
 #[derive(Resource, Debug, Clone)]
@@ -30,26 +31,35 @@ pub struct GameServerConfig {
     pub is_solo: bool,
 }
 
-fn get_customized_default_channels() -> Vec<ChannelConfig> {
-    let memory = 128 * 1024 * 1024;
+const MAX_MEMORY: usize = 128 * 1024 * 1024;
+const RESEND_TIME: Duration = Duration::from_millis(300);
+const AVAILABLE_BYTES_PER_TICK: u64 = 5 * 1024 * 1024;
+
+pub fn get_customized_client_to_server_channels() -> Vec<ChannelConfig> {
+    vec![ChannelConfig {
+        channel_id: 0, // Standard actions
+        max_memory_usage_bytes: MAX_MEMORY,
+        send_type: SendType::ReliableOrdered {
+            resend_time: RESEND_TIME,
+        },
+    }]
+}
+
+pub fn get_customized_server_to_client_channels() -> Vec<ChannelConfig> {
     vec![
         ChannelConfig {
-            channel_id: 0,
-            max_memory_usage_bytes: memory,
-            send_type: SendType::Unreliable,
-        },
-        ChannelConfig {
-            channel_id: 1,
-            max_memory_usage_bytes: memory,
-            send_type: SendType::ReliableUnordered {
-                resend_time: Duration::from_millis(300),
+            channel_id: 0, // Standard actions
+            max_memory_usage_bytes: MAX_MEMORY,
+            send_type: SendType::ReliableOrdered {
+                resend_time: RESEND_TIME,
             },
         },
         ChannelConfig {
-            channel_id: 2,
-            max_memory_usage_bytes: memory,
+            // Chunk data
+            channel_id: 1,
+            max_memory_usage_bytes: MAX_MEMORY,
             send_type: SendType::ReliableOrdered {
-                resend_time: Duration::from_millis(300),
+                resend_time: RESEND_TIME,
             },
         },
     ]
@@ -57,9 +67,9 @@ fn get_customized_default_channels() -> Vec<ChannelConfig> {
 
 pub fn get_shared_renet_config() -> ConnectionConfig {
     ConnectionConfig {
-        client_channels_config: get_customized_default_channels(),
-        server_channels_config: get_customized_default_channels(),
-        ..Default::default()
+        client_channels_config: get_customized_client_to_server_channels(),
+        server_channels_config: get_customized_server_to_client_channels(),
+        available_bytes_per_tick: AVAILABLE_BYTES_PER_TICK,
     }
 }
 
@@ -86,6 +96,21 @@ pub fn payload_to_game_message<T: serde::de::DeserializeOwned>(
     bincode::options().deserialize(&decompressed_payload)
 }
 
-pub fn get_default_game_channel() -> DefaultChannel {
-    DefaultChannel::ReliableUnordered
+pub trait ChannelResolvableExt {
+    fn get_channel_id(&self) -> u8;
+}
+
+impl ChannelResolvableExt for ClientToServerMessage {
+    fn get_channel_id(&self) -> u8 {
+        0
+    }
+}
+
+impl ChannelResolvableExt for ServerToClientMessage {
+    fn get_channel_id(&self) -> u8 {
+        match self {
+            ServerToClientMessage::WorldUpdate(_) => 1,
+            _ => 0,
+        }
+    }
 }
