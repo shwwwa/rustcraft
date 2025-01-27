@@ -14,17 +14,23 @@ pub fn upload_player_inputs_system(
     mut inputs: ResMut<PlayerTickInputsBuffer>,
     mut unacknowledged_inputs: ResMut<UnacknowledgedInputs>,
 ) {
+    if client.is_disconnected() {
+        inputs.buffer.clear();
+        unacknowledged_inputs.0.clear();
+        return;
+    }
+
     let mut frames = vec![];
     for input in inputs.buffer.iter() {
         frames.push(input.clone());
         unacknowledged_inputs.0.push(input.clone());
     }
-    for frame in frames.iter() {
-        debug!(
-            "Sending input: {:?} | {:?} | {:?}",
-            frame.time_ms, frame.inputs, frame.position
-        );
-    }
+    // for frame in frames.iter() {
+    //     debug!(
+    //         "Sending input: {:?} | {:?} | {:?}",
+    //         frame.time_ms, frame.inputs, frame.position
+    //     );
+    // }
     client.send_game_message(ClientToServerMessage::PlayerInputs(frames));
     inputs.buffer.clear();
 }

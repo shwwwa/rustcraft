@@ -1,5 +1,6 @@
-use crate::init::{ServerLobby, ServerTime};
+use crate::init::{LobbyPlayer, ServerLobby, ServerTime};
 use crate::network::broadcast_chat::*;
+use crate::network::cleanup::cleanup_player_from_world;
 use crate::world;
 use crate::world::background_generation::background_world_generation_system;
 use crate::world::broadcast_world::broadcast_world_state;
@@ -77,6 +78,8 @@ fn server_update_system(
             }
             ServerEvent::ClientDisconnected { client_id, reason } => {
                 info!("Player {} disconnected: {}", client_id, reason);
+                lobby.players.remove(client_id);
+                cleanup_player_from_world(&mut world_map, client_id);
             }
         }
     }
@@ -87,12 +90,14 @@ fn server_update_system(
                 ClientToServerMessage::AuthRegisterRequest(auth_req) => {
                     info!("Auth request received {:?}", auth_req);
 
-                    if lobby.players.values().any(|v| *v == auth_req.username) {
+                    if lobby.players.values().any(|v| v.name == auth_req.username) {
                         debug!("Username already in map: {}", &auth_req.username);
                         return;
                     }
 
-                    lobby.players.insert(client_id, auth_req.username.clone());
+                    lobby
+                        .players
+                        .insert(client_id, LobbyPlayer::new(auth_req.username.clone()));
                     debug!("New lobby : {:?}", lobby);
 
                     let new_position = Vec3::new(0.0, 80.0, 0.0);
@@ -128,10 +133,10 @@ fn server_update_system(
 
                     server.send_game_message(client_id, auth_res.into());
 
-                    for (id, name) in lobby.players.iter() {
+                    for (id, player) in lobby.players.iter() {
                         let spawn_message = PlayerSpawnEvent {
                             id: *id,
-                            name: name.into(),
+                            name: player.name.clone(),
                             position: Vec3::new(0.0, 80.0, 0.0),
                         };
 
@@ -149,10 +154,10 @@ fn server_update_system(
                         .unwrap()
                         .as_millis() as u64;
 
-                    let current_author = lobby.players.get(&client_id).unwrap().clone();
+                    let current_author = lobby.players.get(&client_id).unwrap();
 
                     chat_conversation.messages.push(FullChatMessage {
-                        author: current_author,
+                        author: current_author.name.clone(),
                         content: chat_msg.content,
                         timestamp: current_timestamp,
                     });

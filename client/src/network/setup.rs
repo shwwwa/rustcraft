@@ -5,7 +5,7 @@ use bevy_renet::netcode::{
 use bevy_renet::{renet::RenetClient, RenetClientPlugin};
 use rand::Rng;
 use shared::messages::mob::MobUpdateEvent;
-use shared::{get_shared_renet_config, GameServerConfig};
+use shared::{get_shared_renet_config, GameServerConfig, STC_AUTH_CHANNEL};
 
 use crate::menus::solo::SelectedWorld;
 use crate::network::world::update_world_from_network;
@@ -235,7 +235,7 @@ pub fn establish_authenticated_connection_to_server(
         target.state = TargetServerState::Establishing;
     }
 
-    while let Some(Ok(message)) = client.receive_game_message() {
+    while let Some(Ok(message)) = client.receive_game_message_by_channel(STC_AUTH_CHANNEL) {
         match message {
             ServerToClientMessage::AuthRegisterResponse(message) => {
                 target.username = Some(message.username);
@@ -250,7 +250,7 @@ pub fn establish_authenticated_connection_to_server(
                 info!("Connected! {:?}", target);
             }
             _ => {
-                warn!("Unexpected message: {:?}", message);
+                panic!("Unexpected message: {:?}", message);
             }
         }
     }

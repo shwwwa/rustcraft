@@ -25,9 +25,22 @@ use std::net::{SocketAddr, UdpSocket};
 #[derive(Resource, Serialize, Deserialize, Debug, Clone)]
 pub struct ServerTime(pub u64);
 
+#[derive(Debug)]
+pub struct LobbyPlayer {
+    pub name: String,
+}
+
+impl LobbyPlayer {
+    pub fn new(name: String) -> Self {
+        Self { name }
+    }
+}
+
+// ServerLobby represents the list of players connected to the server
+// (who may or may not be in the game world yet)
 #[derive(Debug, Default, Resource)]
 pub struct ServerLobby {
-    pub players: HashMap<PlayerId, String>,
+    pub players: HashMap<PlayerId, LobbyPlayer>,
 }
 
 #[allow(dead_code)]

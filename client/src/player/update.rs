@@ -168,16 +168,17 @@ pub fn update_players_system(
                             player.position,
                             remaining_inputs.len()
                         );
-                    } else {
-                        debug!("Player position matches: {:?}", player.position);
                     }
+                    //  else {
+                    //     debug!("Player position matches: {:?}", player.position);
+                    // }
                 } else {
                     debug!(
                         "No matching input found for last ack time: {} | {:?}",
                         event.last_ack_time, unacknowledged_inputs
                     );
                     player.position = event.position;
-                    if !unacknowledged_inputs.0.is_empty() {
+                    if !unacknowledged_inputs.0.is_empty() && event.last_ack_time != 0 {
                         warn!(
                             "Unacknowledged inputs: {:?}",
                             unacknowledged_inputs

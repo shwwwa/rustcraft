@@ -35,28 +35,50 @@ const MAX_MEMORY: usize = 128 * 1024 * 1024;
 const RESEND_TIME: Duration = Duration::from_millis(300);
 const AVAILABLE_BYTES_PER_TICK: u64 = 5 * 1024 * 1024;
 
-pub fn get_customized_client_to_server_channels() -> Vec<ChannelConfig> {
-    vec![ChannelConfig {
-        channel_id: 0, // Standard actions
-        max_memory_usage_bytes: MAX_MEMORY,
-        send_type: SendType::ReliableOrdered {
-            resend_time: RESEND_TIME,
-        },
-    }]
-}
+pub const CTS_STANDARD_CHANNEL: u8 = 0;
+pub const CTS_AUTH_CHANNEL: u8 = 1;
 
-pub fn get_customized_server_to_client_channels() -> Vec<ChannelConfig> {
+pub fn get_customized_client_to_server_channels() -> Vec<ChannelConfig> {
     vec![
         ChannelConfig {
-            channel_id: 0, // Standard actions
+            channel_id: CTS_STANDARD_CHANNEL,
             max_memory_usage_bytes: MAX_MEMORY,
             send_type: SendType::ReliableOrdered {
                 resend_time: RESEND_TIME,
             },
         },
         ChannelConfig {
-            // Chunk data
-            channel_id: 1,
+            channel_id: CTS_AUTH_CHANNEL,
+            max_memory_usage_bytes: MAX_MEMORY,
+            send_type: SendType::ReliableOrdered {
+                resend_time: RESEND_TIME,
+            },
+        },
+    ]
+}
+
+pub const STC_STANDARD_CHANNEL: u8 = 0;
+pub const STC_CHUNK_DATA_CHANNEL: u8 = 1;
+pub const STC_AUTH_CHANNEL: u8 = 2;
+
+pub fn get_customized_server_to_client_channels() -> Vec<ChannelConfig> {
+    vec![
+        ChannelConfig {
+            channel_id: STC_STANDARD_CHANNEL,
+            max_memory_usage_bytes: MAX_MEMORY,
+            send_type: SendType::ReliableOrdered {
+                resend_time: RESEND_TIME,
+            },
+        },
+        ChannelConfig {
+            channel_id: STC_CHUNK_DATA_CHANNEL,
+            max_memory_usage_bytes: MAX_MEMORY,
+            send_type: SendType::ReliableOrdered {
+                resend_time: RESEND_TIME,
+            },
+        },
+        ChannelConfig {
+            channel_id: STC_AUTH_CHANNEL,
             max_memory_usage_bytes: MAX_MEMORY,
             send_type: SendType::ReliableOrdered {
                 resend_time: RESEND_TIME,
@@ -102,15 +124,19 @@ pub trait ChannelResolvableExt {
 
 impl ChannelResolvableExt for ClientToServerMessage {
     fn get_channel_id(&self) -> u8 {
-        0
+        match self {
+            ClientToServerMessage::AuthRegisterRequest(_) => CTS_AUTH_CHANNEL,
+            _ => CTS_STANDARD_CHANNEL,
+        }
     }
 }
 
 impl ChannelResolvableExt for ServerToClientMessage {
     fn get_channel_id(&self) -> u8 {
         match self {
-            ServerToClientMessage::WorldUpdate(_) => 1,
-            _ => 0,
+            ServerToClientMessage::WorldUpdate(_) => STC_CHUNK_DATA_CHANNEL,
+            ServerToClientMessage::AuthRegisterResponse(_) => STC_AUTH_CHANNEL,
+            _ => STC_STANDARD_CHANNEL,
         }
     }
 }

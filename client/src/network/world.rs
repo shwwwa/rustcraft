@@ -5,6 +5,7 @@ use shared::messages::{
     mob::MobUpdateEvent, ItemStackUpdateEvent, PlayerSpawnEvent, PlayerUpdateEvent,
     ServerToClientMessage,
 };
+use shared::STC_AUTH_CHANNEL;
 
 use crate::world::ClientWorldMap;
 
@@ -21,7 +22,7 @@ pub fn update_world_from_network(
     ev_item_stacks_update: &mut EventWriter<ItemStackUpdateEvent>,
     ev_player_update: &mut EventWriter<PlayerUpdateEvent>,
 ) {
-    while let Some(Ok(msg)) = client.receive_game_message() {
+    while let Some(Ok(msg)) = client.receive_game_message_except_channel(STC_AUTH_CHANNEL) {
         // truncate the message to 1000 characters
         // let debug_msg = format!("{:?}", msg).chars().take(1000).collect::<String>();
         // info!("Received message: {}", debug_msg);

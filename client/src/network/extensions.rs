@@ -13,7 +13,11 @@ pub trait SendGameMessageExtension {
         &mut self,
         channel: u8,
     ) -> Option<Result<ServerToClientMessage, Box<ErrorKind>>>;
-    fn receive_game_message(&mut self) -> Option<Result<ServerToClientMessage, Box<ErrorKind>>>;
+    fn receive_game_message_except_channel(
+        &mut self,
+        channel: u8,
+    ) -> Option<Result<ServerToClientMessage, Box<ErrorKind>>>;
+    // fn receive_game_message(&mut self) -> Option<Result<ServerToClientMessage, Box<ErrorKind>>>;
 }
 
 impl SendGameMessageExtension for RenetClient {
@@ -45,9 +49,15 @@ impl SendGameMessageExtension for RenetClient {
         None
     }
 
-    fn receive_game_message(&mut self) -> Option<Result<ServerToClientMessage, Box<ErrorKind>>> {
+    fn receive_game_message_except_channel(
+        &mut self,
+        excluded_channel_id: u8,
+    ) -> Option<Result<ServerToClientMessage, Box<ErrorKind>>> {
         let channels = get_customized_server_to_client_channels();
         for channel in channels {
+            if channel.channel_id == excluded_channel_id {
+                continue;
+            }
             let res = self.receive_game_message_by_channel(channel.channel_id);
             if let Some(res) = res {
                 return Some(res);
@@ -55,4 +65,15 @@ impl SendGameMessageExtension for RenetClient {
         }
         None
     }
+
+    // fn receive_game_message(&mut self) -> Option<Result<ServerToClientMessage, Box<ErrorKind>>> {
+    //     let channels = get_customized_server_to_client_channels();
+    //     for channel in channels {
+    //         let res = self.receive_game_message_by_channel(channel.channel_id);
+    //         if let Some(res) = res {
+    //             return Some(res);
+    //         }
+    //     }
+    //     None
+    // }
 }
