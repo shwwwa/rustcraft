@@ -2,6 +2,7 @@ pub mod blocks;
 pub mod chunks;
 pub mod coords;
 pub mod fps;
+pub mod inspector;
 mod loaded_stats;
 pub mod setup;
 pub mod targeted_block;

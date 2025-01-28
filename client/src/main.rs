@@ -18,7 +18,7 @@ use bevy::{
     },
     window::PresentMode,
 };
-use bevy_inspector_egui::quick::WorldInspectorPlugin;
+use bevy_inspector_egui::{bevy_egui::EguiPlugin, DefaultInspectorConfigPlugin};
 use clap::Parser;
 use constants::{TEXTURE_PATH_BASE, TEXTURE_PATH_CUSTOM};
 use input::{data::GameAction, keyboard::get_bindings};
@@ -26,7 +26,10 @@ use menus::solo::SelectedWorld;
 use serde::{Deserialize, Serialize};
 use shared::{GameFolderPaths, SpecialFlag};
 use std::collections::BTreeMap;
-use ui::menus::{self, splash};
+use ui::{
+    hud::debug::inspector::inspector_ui,
+    menus::{self, splash},
+};
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
@@ -158,7 +161,10 @@ fn main() {
                 ..default()
             }),
     );
-    app.add_plugins(WorldInspectorPlugin::new());
+
+    app.add_plugins(EguiPlugin)
+        .add_plugins(DefaultInspectorConfigPlugin)
+        .add_systems(Update, inspector_ui);
 
     app.add_event::<LoadWorldEvent>();
     network::add_base_netcode(&mut app);
