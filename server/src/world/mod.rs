@@ -18,7 +18,7 @@ use ulid::Ulid;
 #[derive(Event, Debug)]
 pub struct BlockInteractionEvent {
     pub position: IVec3,
-    pub block_type: Option<BlockData>, // None = suppression, Some = ajout
+    pub block_type: Option<BlockData>, // None = delete, Some = add
 }
 
 pub fn handle_block_interactions(
@@ -28,13 +28,10 @@ pub fn handle_block_interactions(
     for event in events.read() {
         match &event.block_type {
             Some(block) => {
-                // Ajouter un bloc
                 world_map.chunks.set_block(&event.position, *block);
                 debug!("Block added at {:?}: {:?}", event.position, block);
             }
             None => {
-                // Supprimer un bloc
-
                 for (id, nb) in world_map
                     .chunks
                     .get_block_by_coordinates(&event.position)

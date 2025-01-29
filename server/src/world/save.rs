@@ -19,7 +19,6 @@ pub struct WorldData {
     pub time: u64,
 }
 
-// System to save the world when "L" is pressed
 pub fn save_world_system(
     world_map: Res<ServerWorldMap>,
     world_seed: Res<WorldSeed>,

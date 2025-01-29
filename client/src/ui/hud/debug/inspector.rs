@@ -13,8 +13,6 @@ pub fn inspector_ui(world: &mut World) {
     let window = world.query::<&Window>().get_single(world).unwrap();
     let width = window.width();
 
-    info!("Inspector UI width: {}", width);
-
     let time = world.get_resource::<Time>().unwrap();
 
     let mut res = egui::Window::new("Debug UI").default_open(false);

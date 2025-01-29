@@ -16,21 +16,17 @@ pub struct WorldData {
     pub time: u64,
 }
 
-/// Charge les données combinées (carte et graine) d'un fichier
 pub fn load_world_data(
     file_name: &str,
     app: &App,
 ) -> Result<WorldData, Box<dyn std::error::Error>> {
-    // Obtenir le chemin du dossier de jeu
     let game_folder_path = app.world().get_resource::<GameFolderPaths>().unwrap();
 
-    // Construire le chemin complet du fichier
     let file_path: PathBuf = get_game_folder(Some(game_folder_path))
         .join(SAVE_PATH)
         .join(format!("{file_name}.ron"));
     let path: &Path = file_path.as_path();
 
-    // Vérifier si le fichier existe
     if !path.exists() {
         info!(
             "World data file not found: {}. Generating default world and seed.",
@@ -47,9 +43,11 @@ pub fn load_world_data(
         });
     }
 
-    // Lire le contenu du fichier
     let contents: String = fs::read_to_string(path)?;
-    let world_data: WorldData = from_str(&contents)?; // Désérialiser les données combinées
+    let world_data: WorldData = from_str(&contents)?;
+
+    info!("Found world data file from disk: {}", file_path.display());
+
     Ok(world_data)
 }
 

@@ -1,4 +1,7 @@
-use crate::network::dispatcher::{self, setup_resources_and_events};
+use crate::network::{
+    cleanup::cleanup_all_players_from_world,
+    dispatcher::{self, setup_resources_and_events},
+};
 use bevy::{
     diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin},
     prelude::*,
@@ -106,7 +109,7 @@ pub fn init(socket: UdpSocket, config: GameServerConfig, game_folder_path: Strin
     setup_resources_and_events(&mut app);
 
     // Load world from files
-    let world_map = match load_world_map(world_name, &app) {
+    let mut world_map = match load_world_map(world_name, &app) {
         Ok(world) => world,
         Err(e) => {
             error!("Error loading world: {}. Generating a new one.", e);
@@ -116,7 +119,7 @@ pub fn init(socket: UdpSocket, config: GameServerConfig, game_folder_path: Strin
 
     let world_seed = match load_world_seed(world_name, &app) {
         Ok(seed) => {
-            info!("World seed loaded successfully: {}", seed.0); // Affiche la seed chargée
+            info!("World seed loaded successfully: {}", seed.0);
             seed
         }
         Err(e) => {
@@ -132,6 +135,8 @@ pub fn init(socket: UdpSocket, config: GameServerConfig, game_folder_path: Strin
             0
         }
     };
+
+    cleanup_all_players_from_world(&mut world_map);
 
     // Insert world_map and seed into ressources
     app.insert_resource(world_map);
