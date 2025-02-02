@@ -1,4 +1,5 @@
 use crate::{
+    camera::CameraController,
     network::{CurrentPlayerProfile, TargetServer, TargetServerState, UnacknowledgedInputs},
     player::{PlayerLabel, PlayerMaterialHandle},
     world::ClientWorldMap,
@@ -40,6 +41,7 @@ pub fn spawn_players_system(
     mut target_server: ResMut<TargetServer>,
     players: Query<&Player>,
     assets: Res<AssetServer>,
+    mut camera_query: Query<(&mut Transform, &mut CameraController), With<Camera>>,
 ) {
     let current_id = player_profile.into_inner().id;
     'event_loop: for event in ev_spawn.read() {
@@ -54,7 +56,12 @@ pub fn spawn_players_system(
             }
         }
         let is_current_player = event.id == current_id;
-        let player = Player::new(event.id, event.name.clone(), event.position);
+        let player = Player::new(
+            event.id,
+            event.name.clone(),
+            event.position,
+            Transform::default(),
+        );
 
         let color = if is_current_player {
             Color::srgba(1.0, 0.0, 0.0, 1.0)
@@ -83,7 +90,6 @@ pub fn spawn_players_system(
             Name::new(player_name.clone()),
         ));
 
-        // We need the full version of this font so we can use box drawing characters.
         let text_style = TextFont {
             font: assets.load("fonts/FiraMono-Medium.ttf"),
             font_size: PLAYER_LABEL_FONT_SIZE,
@@ -96,6 +102,15 @@ pub fn spawn_players_system(
             target_server.state = TargetServerState::FullyReady;
             entity.insert(CurrentPlayerMarker {});
             info!("Inserted current player marker");
+
+            info!("aaa ---");
+            for (transform, controller) in camera_query.iter_mut() {
+                *transform.into_inner() = event.camera_transform;
+                *controller.into_inner() = event.camera_transform.rotation.into();
+
+                info!("Setting camera transform: {:?}", event.camera_transform);
+            }
+            info!("bbb ---");
         }
 
         let entity_id = entity.id();

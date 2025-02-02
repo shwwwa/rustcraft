@@ -11,13 +11,27 @@ pub struct CameraController {
     pub mouse_sensitivity: f32,
 }
 
+const DEFAULT_DISTANCE: f32 = 10.0;
+const DEFAULT_MOUSE_SENSITIVITY: f32 = 0.003;
+
 impl Default for CameraController {
     fn default() -> Self {
         Self {
-            distance: 10.0,
+            distance: DEFAULT_DISTANCE,
             angle_x: 0.0,
             angle_y: 20.0f32.to_radians(),
-            mouse_sensitivity: 0.003,
+            mouse_sensitivity: DEFAULT_MOUSE_SENSITIVITY,
+        }
+    }
+}
+
+impl From<Quat> for CameraController {
+    fn from(quat: Quat) -> Self {
+        Self {
+            distance: DEFAULT_DISTANCE,
+            angle_x: quat.to_euler(EulerRot::XYZ).0,
+            angle_y: quat.to_euler(EulerRot::XYZ).1,
+            mouse_sensitivity: DEFAULT_MOUSE_SENSITIVITY,
         }
     }
 }

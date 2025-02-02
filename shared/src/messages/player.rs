@@ -19,6 +19,7 @@ pub struct PlayerSpawnEvent {
     pub id: PlayerId,
     pub name: String,
     pub position: Vec3,
+    pub camera_transform: Transform,
 }
 
 #[derive(Event, Serialize, Deserialize, PartialEq, Debug, Clone)]

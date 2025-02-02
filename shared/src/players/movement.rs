@@ -2,7 +2,7 @@ use crate::{
     messages::{NetworkAction, PlayerFrameInput},
     players::{
         collision::check_player_collision,
-        constants::{GRAVITY, JUMP_VELOCITY, SPEED},
+        constants::{FLY_SPEED_MULTIPLIER, GRAVITY, JUMP_VELOCITY, SPEED},
     },
     world::WorldMap,
 };
@@ -96,7 +96,11 @@ pub fn simulate_player_movement(
         }
     }
 
-    let speed = if player.is_flying { SPEED * 5. } else { SPEED };
+    let speed = if player.is_flying {
+        SPEED * FLY_SPEED_MULTIPLIER
+    } else {
+        SPEED
+    };
     let speed = speed * delta;
 
     // Attempt to move the player by the calculated direction

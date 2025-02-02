@@ -100,10 +100,24 @@ fn server_update_system(
                         .insert(client_id, LobbyPlayer::new(auth_req.username.clone()));
                     debug!("New lobby : {:?}", lobby);
 
-                    let new_position = Vec3::new(0.0, 80.0, 0.0);
+                    let maybe_existing_player = world_map.players.get(&client_id);
 
-                    let player_data =
-                        Player::new(client_id, auth_req.username.clone(), new_position);
+                    let new_position = match maybe_existing_player {
+                        Some(existing_player) => existing_player.position,
+                        None => Vec3::new(0.0, 80.0, 0.0),
+                    };
+
+                    let camera_transform = match maybe_existing_player {
+                        Some(existing_player) => existing_player.camera_transform,
+                        None => Transform::default(),
+                    };
+
+                    let player_data = Player::new(
+                        client_id,
+                        auth_req.username.clone(),
+                        new_position,
+                        camera_transform,
+                    );
 
                     world_map.players.insert(client_id, player_data);
 
@@ -119,6 +133,7 @@ fn server_update_system(
                             id: *id,
                             name: player.name.clone(),
                             position: player.position,
+                            camera_transform: player.camera_transform,
                         })
                         .collect();
 
@@ -138,6 +153,7 @@ fn server_update_system(
                             id: *id,
                             name: player.name.clone(),
                             position: Vec3::new(0.0, 80.0, 0.0),
+                            camera_transform: Transform::default(),
                         };
 
                         let spawn_message_wrapped =

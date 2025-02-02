@@ -138,12 +138,12 @@ pub struct Player {
 }
 
 impl Player {
-    pub fn new(id: PlayerId, name: String, position: Vec3) -> Self {
+    pub fn new(id: PlayerId, name: String, position: Vec3, camera_transform: Transform) -> Self {
         Self {
             id,
             name,
             position,
-            camera_transform: Transform::default(),
+            camera_transform,
             velocity: Vec3::ZERO,
             on_ground: true,
             is_flying: false,
