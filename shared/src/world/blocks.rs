@@ -97,10 +97,27 @@ impl BlockId {
         false
     }
 
-    pub fn get_break_time(&self) -> f32 {
+    pub fn get_break_time(&self) -> u8 {
         match *self {
-            Self::Bedrock => -1.,
-            _ => 5.,
+            Self::Dirt => 5,
+            Self::Debug => 7,
+            Self::Grass => 6,
+            Self::Stone => 10,
+            Self::OakLog => 10,
+            Self::OakPlanks => 10,
+            Self::OakLeaves => 2,
+            Self::Sand => 5,
+            Self::Cactus => 4,
+            Self::Ice => 5,
+            Self::Glass => 3,
+            Self::Dandelion => 0,
+            Self::Poppy => 0,
+            Self::TallGrass => 0,
+            Self::Cobblestone => 2,
+            Self::Snow => 9,
+            Self::SpruceLeaves => 2,
+            Self::SpruceLog => 10,
+            _ => 100,
         }
     }
 
